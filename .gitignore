@@ -141,3 +141,28 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# WebStorm / JetBrains
+.idea/
+
+# Playwright
+playwright-report/
+test-results/
+
+# Vitest
+coverage/
+
+# Build output
+dist/
+
+# Vite cache
+.vite/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# npm lockfile vermijden bij pnpm
+package-lock.json
