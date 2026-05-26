@@ -1,0 +1,30 @@
+{
+  "name": "loki-the-treacherous-god",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:ui": "vitest --ui",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^25.9.1",
+    "@vitest/ui": "^4.1.7",
+    "jsdom": "^29.1.1",
+    "playwright": "^1.60.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.12",
+    "vitest": "^4.1.7"
+  },
+  "dependencies": {
+    "@pixi/particle-emitter": "^5.0.10",
+    "bootstrap": "^5.3.8",
+    "gsap": "^3.15.0",
+    "pixi.js": "^8.18.1"
+  }
+}

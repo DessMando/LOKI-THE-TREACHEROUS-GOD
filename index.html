@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>loki-the-treacherous-god</title>
+  </head>
+  <body>
+
+    <div id="loadingScreen" class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center bg-dark text-white" style="z-index: 9999;">
+      <h1>
+        LOKI THE TRICKSTER GOD
+      </h1>
+    </div>
+
+    <div id="bigWinText" class="position-absolute top-50 start-50 translate-middle text-warning fw-bold"
+         style="
+            font-size: 72px;
+            display: none;
+            z-index: 999;">
+      BIG WIN
+    </div>
+
+    <div id="maxWinText" class="position-absolute top-50 start-50 translate-middle text-danger fw-bold"
+          style="
+            font-size: 100px;
+            display: none;
+            z-index: 999;">
+      MAX WIN
+    </div>
+
+    <button id="spinBtn" class="btn btn-success position-absolute top-0 start-0 m-3">
+      SPIN
+    </button>
+
+    <button id="buyBonusBtn" class="btn btn-warning position-absolute top-0 start-50 translate-middle-x mt-3">
+      BUY BONUS
+    </button>
+
+    <div class="position-absolute top-0 start-50 translate-middle-x mt-5">
+
+      <button id="betMinusBtn" class="btn btn-danger">
+        -
+      </button>
+
+      <button id="betPlusBtn" class="btn btn-primary">
+        +
+      </button>
+
+    </div>
+
+    <button id="autoPlayBtn" class="btn btn-light position-absolute bottom-0 start-50 translate-middle-x mb-3">
+      AUTO PLAY
+    </button>
+
+    <button id="turboBtn" class="btn btn-danger position-absolute bottom-0 end-0 m-3">
+      TURBO OFF
+    </button>
+
+    <div id="uiPanel" class="position-absolute top-0 end-0 m-3 text-white">
+
+      <div id="balanceText">
+        Balance: €1000.00
+      </div>
+
+      <div id="betText">
+        Bet: €0.10
+      </div>
+
+      <div id="multiplierText">
+        Multiplier: x1
+      </div>
+
+      <div id="freeSpinsText">
+        Free Spins: 0
+      </div>
+
+      <div id="bonusActiveText">
+        BONUS INACTIVE
+      </div>
+
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
