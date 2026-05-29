@@ -1,22 +1,19 @@
 import * as PIXI from "pixi.js";
 import { SYMBOLS } from "../data/symbolData.ts";
 import { Symbol } from "./Symbol.ts";
-import { ROWS, COLS, SYMBOL_SIZE, GRID_START_X, GRID_START_Y } from "../data/constants.ts";
+import { SYMBOL_SIZE, GRID_START_X, GRID_START_Y } from "../data/constants.ts";
 import { WinSystem } from "../systems/WinSystem.ts";
 import { CascadeSystem } from "../systems/CascadeSystem.ts";
 import { BonusSystem } from "../systems/BonusSystem.ts";
 import { SpinSystem } from "../systems/SpinSystem.ts";
-import { MultiplierSystem } from "../systems/MultiplierSystem.ts";
 
 export class Grid {
     private isSpinning: boolean = false;
-    private currentBet: number = 0.10;
 
     private winSystem: WinSystem;
     private cascadeSystem: CascadeSystem;
     private bonusSystem: BonusSystem;
     private spinSystem: SpinSystem;
-    private multiplierSystem: MultiplierSystem;
 
     public container: PIXI.Container;
     private symbols: Symbol[][] = [];
@@ -28,13 +25,12 @@ export class Grid {
         this.cascadeSystem = new CascadeSystem(GRID_START_X, GRID_START_Y, SYMBOL_SIZE);
         this.bonusSystem = new BonusSystem();
         this.spinSystem = new SpinSystem(GRID_START_X, GRID_START_Y, SYMBOL_SIZE);
-        this.multiplierSystem = new MultiplierSystem();
 
         this.createGrid();
     }
 
     private createGrid(): void {
-        this.multiplierSystem.createGrid(this.symbols, () => this.getRandomSymbol(), this.container);
+        this.spinSystem.createGrid(this.symbols, () => this.getRandomSymbol(), this.container);
     }
 
     public async spin(): Promise<void> {
@@ -59,7 +55,7 @@ export class Grid {
         let hasWins = true;
 
         while (hasWins) {
-            const clusters = this.winSystem.finsAllClusters(this.symbols);
+            const clusters = this.winSystem.findAllClusters(this.symbols);
 
             if (clusters.length === 0) {
                 hasWins = false;

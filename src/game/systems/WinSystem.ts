@@ -3,7 +3,7 @@ import { Symbol } from "../core/Symbol.ts";
 export class WinSystem {
     private totalMultiplier: number = 1;
 
-    public finsAllClusters(symbols: Symbol[][], visited: Set<string> = new Set()): Symbol[][] {
+    public findAllClusters(symbols: Symbol[][], visited: Set<string> = new Set()): Symbol[][] {
         const clusters: Symbol[][] = [];
 
         for (let row = 0; row < symbols.length; row++) {
@@ -78,6 +78,23 @@ export class WinSystem {
         console.log("🔮 LOKI MAGIC ACTIVATED")
     }
 
+    public applyRandomMultiplier(symbols: Symbol[][], isBonusActive: boolean): void {
+        let symbol: Symbol | null = null;
+        let attempts = 0;
+
+        while (!symbol && attempts < 10) {
+            const randomRow = Math.floor(Math.random() * symbols.length);
+            const randomCol = Math.floor(Math.random() * symbols[0].length);
+            symbol = symbols[randomRow][randomCol];
+            attempts++
+        }
+
+        if (!symbol) return;
+
+        const boost = isBonusActive ? 2 : 1;
+        symbol.multiplier += boost;
+        symbol.multiplierText.text = `x${symbol.multiplier}`;
+    }
     public checkBigWin(payout: number): "big" | "max" | null {
         if (payout >= 2000) return "max";
         if (payout >= 500) return "big";
