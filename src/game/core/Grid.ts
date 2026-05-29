@@ -1,7 +1,8 @@
 import * as PIXI from "pixi.js"
 import { SYMBOLS } from "../data/symbolData.ts";
 import { Symbol } from "./Symbol.ts";
-
+import { CascadeSystem } from "../systems/CascadeSystem.ts";
+import { BonusSystem } from "../systems/BonusSystem.ts";
 import {
     ROWS,
     COLS,
@@ -11,16 +12,20 @@ import {
 } from "../data/constants.ts";
 
 export class Grid {
-    private isSpinning: boolean = false;
+    public isSpinning: boolean = false;
+    private cascadeSystem: CascadeSystem;
+    private bonusSystem: BonusSystem;
     private totalMultiplier: number = 1;
-    private freeSpins: number = 0;
-    private isBonusActive: boolean = false;
+    public freeSpins: number = 0;
+    public isBonusActive: boolean = false;
     private currentBet: number = 0.10;
     public container: PIXI.Container;
-    private  symbols: Symbol[][] = [];
+    public symbols: Symbol[][] = [];
 
     constructor() {
         this.container = new PIXI.Container;
+        this.cascadeSystem = new CascadeSystem(this)
+        this.bonusSystem = new BonusSystem(this);
         this.createGrid();
     }
 
@@ -62,18 +67,13 @@ export class Grid {
                 console.log("BONUS ENDED");
             }
         }
-        this.checkScatterBonus();
+        this.bonusSystem.checkScatterBonus();
 
 
         this.dropSymbols();
 
         this.updateUI();
         this.isSpinning = false;
-    }
-
-    public buyBonus(): void {
-        this.startBonusGame();
-        console.log("BONUS PURCHASED");
     }
 
     private clearGrid(): void {
@@ -93,7 +93,7 @@ export class Grid {
         }
     }
 
-    private async checkWins(): Promise<void> {
+    public async checkWins(): Promise<void> {
         const visited: Set<string> = new Set();
 
         for (let row = 0; row < this.symbols.length; row++) {
@@ -119,7 +119,7 @@ export class Grid {
                     console.log("TOTAL MULTIPLIER:", this.calculateTotalMultiplier());
                     await this.removeCluster(cluster);
                     this.applyRandomMultiplier();
-                    await this.resolveCascade();
+                    await this.cascadeSystem.resolve();
                     this.activateLokiMagic();
                 }
             }
@@ -168,7 +168,7 @@ export class Grid {
         }
     }
 
-    private async startCascade(): Promise<void> {
+    public async startCascade(): Promise<void> {
         for (let col = 0; col < this.symbols[0].length; col++) {
             let emptySpaces = 0;
 
@@ -194,7 +194,7 @@ export class Grid {
         }
     }
 
-    private refillGrid(): void {
+    public refillGrid(): void {
         for (let row = 0; row < this.symbols.length; row++) {
             for (let col = 0; col < this.symbols[row].length; col++) {
                 if (this.symbols[row][col] === null) {
@@ -211,12 +211,6 @@ export class Grid {
                 }
             }
         }
-    }
-
-    private async resolveCascade(): Promise<void> {
-        await this.startCascade();
-        this.refillGrid();
-        await this.checkWins();
     }
 
     private applyRandomMultiplier(): void {
@@ -246,28 +240,6 @@ export class Grid {
             }
         }
         return total;
-    }
-
-    private checkScatterBonus(): void {
-        let scatterCount = 0;
-        for (let row = 0; row < this.symbols.length; row++) {
-            for (let col = 0; col < this.symbols[row].length; col++) {
-                const symbol = this.symbols[row][col];
-                if (!symbol) continue;
-                if (symbol.type === "scatter") {
-                    scatterCount++;
-                }
-            }
-        }
-        if (scatterCount >= 4) {
-            this.startBonusGame();
-        }
-    }
-
-    private startBonusGame(): void {
-        this.isBonusActive = true;
-        this.freeSpins = 10
-        console.log("FREE SPINS STARTED");
     }
 
     private activateLokiMagic(): void {
