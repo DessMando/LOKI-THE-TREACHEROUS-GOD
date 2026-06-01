@@ -3,7 +3,7 @@ import { gsap } from "gsap";
 import { GAME_WIDTH, GAME_HEIGHT } from "../data/constants.ts";
 import { Grid } from "./Grid.ts";
 
-import { GameStateManager, GameState } from "../data/constants.ts";
+import { GameStateManager, GameState } from "../systems/GameStateManager.ts";
 import { BettingSystem } from "../systems/BettingSystem.ts";
 import { PayoutSystem } from "../systems/PayoutSystem.ts";
 import { UIManager } from "../systems/UIManager.ts";
@@ -33,24 +33,29 @@ export class Game {
     }
 
     private async init(): Promise<void> {
-        this.app = new PIXI.Application();
+        try {
+            this.app = new PIXI.Application();
 
-        await this.app.init({
-            width: GAME_WIDTH,
-            height: GAME_HEIGHT,
-            backgroundColor: "#070b14";
-        });
+            await this.app.init({
+                width: GAME_WIDTH,
+                height: GAME_HEIGHT,
+                backgroundColor: "#070b14",
+            });
 
-        document.body.appendChild(this.app.canvas);
+            document.body.appendChild(this.app.canvas);
 
-        this.grid = new Grid();
-        this.app.stage.addChild(this.grid.container);
+            this.grid = new Grid();
+            this.app.stage.addChild(this.grid.container);
 
-        this.setupUIEvents();
+            this.setupUIEvents();
 
-        await this.sound.preloadAllSoubds();
+            await this.sound.preloadAllSounds();
 
-        this.ui.showLoading(false);
+            this.ui.showLoading(false);
+            this.updateUIDisplay();
+        } catch (error) {
+            console.error("Init fout:", error);
+        }
     }
 
     private setupUIEvents(): void {
@@ -58,6 +63,7 @@ export class Game {
         this.ui.onBuyBonusClick(() => {
             this.grid.buyBonus();
             this.sound.playButtonClick();
+            this.updateUIDisplay();
         });
 
         this.ui.onBetIncrement(() => {
@@ -66,7 +72,11 @@ export class Game {
             this.sound.playButtonClick();
         });
 
-        this.updateUIDisplay();
+        this.ui.OnBetDecrement(() => {
+            this.betting.decreaseBet();
+            this.ui.updateBet(this.betting.getCurrentBet());
+            this.sound.playButtonClick();
+        });
     }
 
     private async handleSpin(): Promise<void> {
@@ -83,7 +93,22 @@ export class Game {
         this.ui.lockUI();
         this.sound.playSpin();
 
-        await this.grid.spin();
+        try {
+            await this.grid.spin();
+        } catch (error) {
+            console.error("❌ Spin error:", error);
+        }
+
+        const winAmount = this.grid.getTotalWin();
+
+        if(winAmount > 0) {
+            console.log(`🎉 WON: €${winAmount.toFixed(2)}`);
+
+            this.betting.addWinnings(winAmount);
+            this.sound.playWin("big");
+            this.shakeScreen();
+        }
+        this.grid.resetWinAmount();
 
         this.gameState.setState(GameState.IDLE);
         this.ui.unlockUI();
@@ -95,9 +120,9 @@ export class Game {
         this.ui.updateAll({
             balance: this.betting.getBalance(),
             bet: this.betting.getCurrentBet(),
-            multiplier: 1,
-            freeSpins: 0,
-            bonusActive: false
+            multiplier: this.grid.getMultiplier(),
+            freeSpins: this.grid.getFreeSpins(),
+            bonusActive: this.grid.isBonusActive()
         });
     }
 
@@ -106,7 +131,26 @@ export class Game {
             x: 10,
             duration: 0.05,
             repeat: 5,
-            yoyo: true
+            yoyo: true,
+            onComplete: () => {
+                this.app.stage.x = 0;
+            }
         });
+    }
+
+    public getSound(): SoundSystem {
+        return this.sound;
+    }
+
+    public getUI(): UIManager {
+        return this.ui;
+    }
+
+    public getPayout(): PayoutSystem {
+        return this.payout;
+    }
+
+    public getBetting(): BettingSystem {
+        return this.betting;
     }
 }

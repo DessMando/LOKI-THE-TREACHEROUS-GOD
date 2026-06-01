@@ -17,7 +17,7 @@ export class BettingSystem {
         return this.balance >= this.currentBet;
     }
 
-    public async  deductBet(): Promise<boolean> {
+    public async deductBet(): Promise<boolean> {
         if(!this.canSpins()) {
             console.warn(`Insufficient balance. Have: €${this.balance}, Need: €${this.currentBet}`);
             return false;
@@ -35,6 +35,12 @@ export class BettingSystem {
         this.balance += amount;
         this.totalWon += amount;
         console.log(`Winnings added: €${amount.toFixed(2)}, Balance: €${this.balance.toFixed(2)}`);
+    }
+
+    public increaseBet(): void {
+        const newBet = this.currentBet + 0.10;
+        this.currentBet = Math.min(newBet, this.maxBet);
+        console.log(`Bet increased to: €${this.currentBet.toFixed(2)}`);
     }
 
     public decreaseBet(): void {

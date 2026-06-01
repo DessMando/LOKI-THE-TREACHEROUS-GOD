@@ -17,6 +17,7 @@ export class Grid {
 
     public container: PIXI.Container;
     private symbols: Symbol[][] = [];
+    private totalWinThisSpin: number = 0;
 
     constructor() {
         this.container = new PIXI.Container();
@@ -38,6 +39,8 @@ export class Grid {
 
         this.isSpinning = true;
 
+        this.totalWinThisSpin = 0;
+
         try {
             this.spinSystem.clearGrid(this.symbols, this.container);
             this.createGrid();
@@ -53,6 +56,7 @@ export class Grid {
 
     private async resolveWins(): Promise<void> {
         let hasWins = true;
+        let cascadeLevel = 1;
 
         while (hasWins) {
             const clusters = this.winSystem.findAllClusters(this.symbols);
@@ -64,7 +68,10 @@ export class Grid {
 
             for (const cluster of clusters) {
                 const multiplier = this.winSystem.calculateTotalMultiplier(this.symbols);
-                console.log(`WIN: ${cluster.length}, Multiplier: ${multiplier}x`);
+                const clusterPayout = cluster.length * 6 * multiplier * 0.10;
+                this.totalWinThisSpin += clusterPayout;
+
+                console.log(`WIN: ${cluster.length}symbols, payout: €${clusterPayout.toFixed(2)} , Total this spin: €${this.totalWinThisSpin.toFixed(2)}`);
 
                 await this.removeCluster(cluster);
                 this.winSystem.applyRandomMultiplier(this.symbols, this.bonusSystem.getIsBonusActive());
@@ -72,6 +79,8 @@ export class Grid {
 
             await this.cascadeSystem.cascade(this.symbols, () => this.getRandomSymbol(), this.container);
             this.winSystem.activateLokiMagic(this.symbols);
+
+            cascadeLevel++;
         }
     }
 
@@ -90,5 +99,35 @@ export class Grid {
     private getRandomSymbol(): any {
         const randomIndex = Math.floor(Math.random() * SYMBOLS.length);
         return SYMBOLS[randomIndex];
+    }
+
+    public getTotalWin(): number {
+        return this.totalWinThisSpin
+    }
+
+    public getFreeSpins(): number {
+        return this.bonusSystem.getFreeSpins();
+    }
+
+    public isBonusActive() {
+        return this.bonusSystem.getIsBonusActive();
+    }
+
+    public getMultiplier(): number {
+        let totalMultiplier = 1;
+
+        for (let row = 0; row < this.symbols.length; row++) {
+            for (let col = 0; col < this.symbols[row].length; col++) {
+                const symbol = this.symbols[row][col];
+                if (symbol) {
+                    totalMultiplier += (symbol.multiplier - 1);
+                }
+            }
+        }
+        return totalMultiplier
+    }
+
+    public resetWinAmount(): void {
+        this.totalWinThisSpin = 0;
     }
 }
