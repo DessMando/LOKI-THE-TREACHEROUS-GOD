@@ -161,7 +161,7 @@ export class UIManager {
         element.classList.add(animationName);
     }
 
-    public onSpinButtonCLick(callback: () => void): void {
+    public onSpinButtonClick(callback: () => void): void {
         if (this.spinButton) {
             this.spinButton.addEventListener("click", callback);
         }
