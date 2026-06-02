@@ -51,4 +51,4 @@ export const SYMBOL_DATA = {
         rarity: 6,              // Meest zeldzaam
         isBonusTrigger: true    // Dit symbol triggert bonus!
     }
-};
+} as const;

@@ -79,6 +79,10 @@ export class GameStateManager {
         return this.currentState === GameState.GAME_OVER;
     }
 
+    public isResolvingWins(): boolean {
+        return this.currentState === GameState.RESOLVING_WINS;
+    }
+
     public getHistory(): GameState[] {
         return [...this.stateHistory];
     }
