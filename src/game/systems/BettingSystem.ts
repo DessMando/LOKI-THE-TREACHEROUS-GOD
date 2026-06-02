@@ -13,12 +13,12 @@ export class BettingSystem {
         this.balance = startingBalance;
     }
 
-    public canSpins(): boolean {
+    public canSpin(): boolean {
         return this.balance >= this.currentBet;
     }
 
     public async deductBet(): Promise<boolean> {
-        if(!this.canSpins()) {
+        if(!this.canSpin()) {
             console.warn(`Insufficient balance. Have: €${this.balance}, Need: €${this.currentBet}`);
             return false;
         }
