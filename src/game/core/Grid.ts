@@ -68,7 +68,11 @@ export class Grid {
 
             for (const cluster of clusters) {
                 const multiplier = this.winSystem.calculateTotalMultiplier(this.symbols);
-                const clusterPayout = cluster.length * 6 * multiplier * 0.10;
+                const baseValue = 6;
+                let clusterPayout = baseValue * cluster.length * multiplier * 0.10;
+                if (cluster.length >= 5) {
+                    clusterPayout *= 1.25
+                }
                 this.totalWinThisSpin += clusterPayout;
 
                 console.log(`WIN: ${cluster.length}symbols, payout: €${clusterPayout.toFixed(2)} , Total this spin: €${this.totalWinThisSpin.toFixed(2)}`);

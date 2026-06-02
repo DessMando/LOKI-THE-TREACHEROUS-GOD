@@ -17,6 +17,7 @@ export class Symbol {
         this.row = row;
         this.col = col;
         this.sprite = new PIXI.Graphics();
+        this.multiplierText = new PIXI.Text(""),
         this.draw();
     }
 

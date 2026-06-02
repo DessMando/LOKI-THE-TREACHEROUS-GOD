@@ -1,7 +1,7 @@
 import { Symbol } from "../core/Symbol.ts";
 
 export class BonusSystem {
-    private  isBonusActive: boolean = false;
+    private isBonusActive: boolean = false;
     private freeSpins: number = 0;
     private SCATTER_THRESHOLD: number = 4;
 
@@ -68,5 +68,17 @@ export class BonusSystem {
         if (bonusActivateText) {
             bonusActivateText.innerHTML = this.isBonusActive ? "BONUS" : "";
         }
+    }
+
+    public resetBonus(): void {
+        this.freeSpins = 0;
+        this.isBonusActive = false;
+    }
+
+    public getBonus(): { isBonusActive: boolean; freeSpins: number} {
+        return {
+            isBonusActive: this.isBonusActive,
+            freeSpins: this.freeSpins
+        };
     }
 }

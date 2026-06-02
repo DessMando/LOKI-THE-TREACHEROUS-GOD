@@ -1,4 +1,3 @@
-import { Grid } from "../core/Grid.ts";
 import {Symbol} from "../core/Symbol.ts";
 
 export class CascadeSystem {

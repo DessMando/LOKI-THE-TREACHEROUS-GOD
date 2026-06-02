@@ -71,6 +71,14 @@ export class GameStateManager {
         return this.currentState === GameState.IDLE;
     }
 
+    public isBonusActive(): boolean {
+        return this.currentState === GameState.BONUS_ACTIVE;
+    }
+
+    public isGameOver(): boolean {
+        return this.currentState === GameState.GAME_OVER;
+    }
+
     public getHistory(): GameState[] {
         return [...this.stateHistory];
     }
