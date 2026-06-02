@@ -67,6 +67,10 @@ export class GameStateManager {
         return this.currentState === GameState.SPINNING;
     }
 
+    public isIdle(): boolean {
+        return this.currentState === GameState.IDLE;
+    }
+
     public getHistory(): GameState[] {
         return [...this.stateHistory];
     }
