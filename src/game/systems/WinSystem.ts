@@ -31,7 +31,7 @@ export class WinSystem {
             const [r, c] = stack.pop()!;
             const key = `${r}-${c}`;
 
-            if (!visited.has(key)) continue;
+            if (visited.has(key)) continue;
             if (!symbols[r]?.[c]) continue;
             if (symbols[r][c].type !== type) continue;
 

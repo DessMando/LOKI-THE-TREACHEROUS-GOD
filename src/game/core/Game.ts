@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import { gsap } from "gsap";
 import {GAME_HEIGHT, GAME_WIDTH} from "../data/constants.ts";
 import {Grid} from "./Grid.ts";
 import {GameState, GameStateManager} from "../systems/GameStateManager.ts";
@@ -74,11 +75,11 @@ export class Game {
 
         this.ui.onBetIncrement(() => {
             this.betting.increaseBet();
-            this.ui.updateBet(this.betting.getTotalBet());
+            this.ui.updateBet(this.betting.getCurrentBet());
             this.sound.playButtonClick();
         });
 
-        this.ui.onBetIncrement(() => {
+        this.ui.onBetDecrement(() => {
             this.betting.decreaseBet();
             this.ui.updateBet(this.betting.getCurrentBet());
             this.sound.playButtonClick();
