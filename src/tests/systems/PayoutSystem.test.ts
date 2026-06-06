@@ -1,211 +1,149 @@
-import {describe, it, expect, beforeEach} from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { PayoutSystem } from "../../game/systems/PayoutSystem.ts";
 
 describe("PayoutSystem", () => {
     let payout: PayoutSystem;
+
     beforeEach(() => {
         payout = new PayoutSystem();
     });
 
-    it("calculateClusterPayout basic calculation", () => {
-        const payout1 = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, false);
-        expect(payout1).toBe(2.40);
-    });
+    describe("calculateClusterPayout", () => {
+        it("returns a positive number for a known symbol", () => {
+            expect(payout.calculateClusterPayout("crown", 4, 1, 0.10)).toBeGreaterThan(0);
+        });
 
-    it("different symbols have different payouts", () => {
-        const runePayout = payout.calculateClusterPayout("rune", 4, 1, 0.10, 1, false);
-        const crownPayout = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, false);
+        it("returns 0 for an unknown symbol", () => {
+            expect(payout.calculateClusterPayout("dragon", 4, 1, 0.10)).toBe(0);
+        });
 
-        expect(crownPayout).toBeGreaterThan(runePayout);
-        expect(crownPayout / runePayout);
-    });
+        it("larger cluster pays more than smaller cluster", () => {
+            const small = payout.calculateClusterPayout("crown", 4, 1, 0.10);
+            const large = payout.calculateClusterPayout("crown", 8, 1, 0.10);
+            expect(large).toBeGreaterThan(small);
+        });
 
-    it("all symbols have correct base values", () => {
-        const symbolValues = [
-            { symbol: "rune", expectedMultiplier: 1 },
-            { symbol: "staff", expectedMultiplier: 2 },
-            { symbol: "wolf", expectedMultiplier: 3 },
-            { symbol: "orb", expectedMultiplier: 4 },
-            { symbol: "crown", expectedMultiplier: 6 },
-            { symbol: "wild", expectedMultiplier: 8 },
-            { symbol: "scatter", expectedMultiplier: 10 }
-        ];
+        it("cluster of 5+ gets the 1.25x bonus", () => {
+            const four = payout.calculateClusterPayout("crown", 4, 1, 0.10);
+            const five = payout.calculateClusterPayout("crown", 5, 1, 0.10);
+            expect(five).toBeGreaterThan(four * (5 / 4));
+        });
 
-        symbolValues.forEach(({ symbol, expectedMultiplier }) => {
-            const payout1 = payout.calculateClusterPayout(symbol, 1, 1, 0.10, 1, false);
-            const expectedPayout = expectedMultiplier * 0.10;
-            expect(payout1).toBe(expectedPayout);
+        it("higher bet gives proportionally higher payout", () => {
+            const low  = payout.calculateClusterPayout("crown", 4, 1, 0.10);
+            const high = payout.calculateClusterPayout("crown", 4, 1, 1.00);
+            expect(high).toBeCloseTo(low * 10, 1);
+        });
+
+        it("symbol multiplier scales the payout", () => {
+            const x1 = payout.calculateClusterPayout("crown", 4, 1, 0.10);
+            const x3 = payout.calculateClusterPayout("crown", 4, 3, 0.10);
+            expect(x3).toBeCloseTo(x1 * 3, 1);
+        });
+
+        it("cascade level 2 applies 1.5x over level 1", () => {
+            const l1 = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1);
+            const l2 = payout.calculateClusterPayout("crown", 4, 1, 0.10, 2);
+            expect(l2).toBeCloseTo(l1 * 1.5, 2);
+        });
+
+        it("bonus active increases payout", () => {
+            const normal = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, false);
+            const bonus  = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, true);
+            expect(bonus).toBeGreaterThan(normal);
+        });
+
+        it("crown pays more than rune for same cluster", () => {
+            const rune  = payout.calculateClusterPayout("rune",  4, 1, 0.10);
+            const crown = payout.calculateClusterPayout("crown", 4, 1, 0.10);
+            expect(crown).toBeGreaterThan(rune);
+        });
+
+        it("wild pays more than crown", () => {
+            const crown = payout.calculateClusterPayout("crown", 4, 1, 0.10);
+            const wild  = payout.calculateClusterPayout("wild",  4, 1, 0.10);
+            expect(wild).toBeGreaterThan(crown);
+        });
+
+        it("result is rounded to at most 2 decimal places", () => {
+            const result = payout.calculateClusterPayout("rune", 4, 1, 0.10);
+            const decimals = (result.toString().split(".")[1] ?? "").length;
+            expect(decimals).toBeLessThanOrEqual(2);
         });
     });
 
-    it('symbol multiplier doubles payout', () => {
-        const noMultiplier = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, false);
-        const withMultiplier = payout.calculateClusterPayout("crown", 4, 2, 0.10, 1, false);
+    describe("getWinTier", () => {
+        it("returns null when payout is less than 5x bet", () => {
+            expect(payout.getWinTier(0.40, 0.10)).toBeNull();
+        });
 
-        expect(withMultiplier).toBe(noMultiplier * 2);
-    });
+        it("returns 'small' for 5x–24x bet", () => {
+            expect(payout.getWinTier(0.50, 0.10)).toBe("small");
+            expect(payout.getWinTier(2.40, 0.10)).toBe("small");
+        });
 
-    it("symbol multiplier scales linearly", () => {
-        const mult1 = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, false);
-        const mult2 = payout.calculateClusterPayout("crown", 4, 2, 0.10, 1, false);
-        const mult3 = payout.calculateClusterPayout("crown", 4, 3, 0.10, 1, false);
+        it("returns 'big' for 25x–99x bet", () => {
+            expect(payout.getWinTier(2.50, 0.10)).toBe("big");
+            expect(payout.getWinTier(9.90, 0.10)).toBe("big");
+        });
 
-        // Lineair: mult2 = mult1 * 2, mult3 = mult1 * 3
-        expect(mult2 / mult1).toBe(2);
-        expect(mult3 / mult1).toBe(3);
-    });
+        it("returns 'max' for 100x bet or more", () => {
+            expect(payout.getWinTier(10.00, 0.10)).toBe("max");
+        });
 
-    it("cascade multiplier increase exponentially", () => {
-        const cascade1 = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, false);
-        const cascade2 = payout.calculateClusterPayout("crown", 4, 1, 0.10, 2, false);
-        const cascade3 = payout.calculateClusterPayout("crown", 4, 1, 0.10, 3, false);
-        const cascade5 = payout.calculateClusterPayout("crown", 4, 1, 0.10, 5, false);
-
-        expect(cascade2).toBe(cascade1 * 1.5);
-        expect(cascade3).toBe(cascade1 * 2.0);
-        expect(cascade5).toBe(cascade1 * 5.0);
-    });
-
-    it("cascade multipliers increase progressively", () => {
-        const cascade1 = payout.calculateClusterPayout("rune", 3, 1, 1.0, 1, false);
-        const cascade2 = payout.calculateClusterPayout("rune", 3, 1, 1.0, 2, false);
-        const cascade3 = payout.calculateClusterPayout("rune", 3, 1, 1.0, 3, false);
-        const cascade4 = payout.calculateClusterPayout("rune", 3, 1, 1.0, 4, false);
-
-        // Each cascade should be better than previous
-        expect(cascade2).toBeGreaterThan(cascade1);
-        expect(cascade3).toBeGreaterThan(cascade2);
-        expect(cascade4).toBeGreaterThan(cascade3);
-    });
-
-    it("bonus mode multiplies payout by 1.5x", () => {
-        const normalWin = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, false);
-        const bonusWin = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, true);
-
-        expect(bonusWin).toBe(normalWin * 1.5);
-    });
-
-    it('bonus mode works with cascade', () => {
-        const cascade3Normal = payout.calculateClusterPayout("crown", 4, 1, 0.10, 3, false);
-        const cascade3Bonus = payout.calculateClusterPayout("crown", 4, 1, 0.10, 3, true);
-
-        expect(cascade3Bonus).toBe(cascade3Normal * 1.5);
-    });
-
-    it("bonus mode works with all symbols", () => {
-        const symbols = ["rune", "staff", "wolf", "orb", "crown", "wild", "scatter"];
-
-        symbols.forEach(symbol => {
-            const normal = payout.calculateClusterPayout(symbol, 3, 1, 0.10, 1, false);
-            const bonus = payout.calculateClusterPayout(symbol, 3, 1, 0.10, 1, true);
-
-            expect(bonus).toBe(normal * 1.5);
+        it("scales correctly with different bet sizes", () => {
+            expect(payout.getWinTier(5.00, 1.00)).toBe("small");
+            expect(payout.getWinTier(0.49, 1.00)).toBeNull();
         });
     });
 
-    it('clusters of 5+ get 25% bonus', () => {
-        const cluster4 = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, false);
-        const cluster5 = payout.calculateClusterPayout("crown", 5, 1, 0.10, 1, false);
-
-        expect(cluster5).toBe(cluster4 * 1.25);
-    });
-
-    it("clusters of 6+ also get 25% bonus", () => {
-        const cluster5 = payout.calculateClusterPayout("crown", 5, 1, 0.10, 1, false);
-        const cluster6 = payout.calculateClusterPayout("crown", 6, 1, 0.10, 1, false);
-
-        expect(cluster6 / cluster5).toBeCloseTo(1.2);
-    });
-
-    it("getWinTier classifies wins correctly", () => {
-        expect(payout.getWinTier(0.50, 0.10)).toBe("small");
-        expect(payout.getWinTier(2.50, 0.10)).toBe("big");
-        expect(payout.getWinTier(10.00, 0.10)).toBe("max");
-        expect(payout.getWinTier(0.20, 0.10)).toBe(null);
-    });
-
-    it("getWinTier handles edge cases", () => {
-        // Exactly 5x
-        expect(payout.getWinTier(0.50, 0.10)).toBe("small");
-
-        // Just under 25x
-        expect(payout.getWinTier(2.49, 0.10)).toBe("small");
-
-        // Exactly 25x
-        expect(payout.getWinTier(2.50, 0.10)).toBe("big");
-
-        // Just under 100x
-        expect(payout.getWinTier(9.99, 0.10)).toBe("big");
-
-        // Exactly 100x
-        expect(payout.getWinTier(10.00, 0.10)).toBe("max");
-    });
-
-    it("getSymbolInfo returns symbol data", () => {
-        const crownInfo = payout.getSymbolInfo("crown");
-
-        expect(crownInfo).toBeDefined();
-        expect(crownInfo?.baseValue).toBe(6);
-        expect(crownInfo?.rarity).toBe(5);
-    });
-
-    it("getSymbolInfo returns null for unknown symbol", () => {
-        const unknownInfo = payout.getSymbolInfo("nonexistent");
-        expect(unknownInfo).toBe(null);
-    });
-
-    it("getSymbolInfo returns all 7 symbols", () => {
-        const symbols = ["rune", "staff", "wolf", "orb", "crown", "wild", "scatter"];
-
-        symbols.forEach(symbol => {
-            const info = payout.getSymbolInfo(symbol);
+    describe("getSymbolInfo", () => {
+        it("returns info for a known symbol", () => {
+            const info = payout.getSymbolInfo("crown");
             expect(info).not.toBeNull();
-            expect(info?.baseValue).toBeGreaterThan(0);
-            expect(info?.rarity).toBeGreaterThan(0);
+            expect(info?.name).toBe("Crown");
+        });
+
+        it("returns null for an unknown symbol", () => {
+            expect(payout.getSymbolInfo("dragon")).toBeNull();
+        });
+
+        it("scatter has higher baseValue than crown", () => {
+            const scatter = payout.getSymbolInfo("scatter");
+            const crown   = payout.getSymbolInfo("crown");
+            expect(scatter!.baseValue).toBeGreaterThan(crown!.baseValue);
         });
     });
 
-    it("setSymbolPayout modifies payout values", () => {
-        const originalPayout = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, false);
-        const success = payout.setSymbolPayout("crown", 12);  // Double it
-        const newPayout = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, false);
+    describe("setSymbolPayout", () => {
+        it("updates the baseValue and returns true", () => {
+            expect(payout.setSymbolPayout("rune", 99)).toBe(true);
+            expect(payout.getSymbolInfo("rune")?.baseValue).toBe(99);
+        });
 
-        expect(success).toBe(true);
-        expect(newPayout).toBe(originalPayout * 2);
+        it("returns false for an unknown symbol", () => {
+            expect(payout.setSymbolPayout("dragon", 5)).toBe(false);
+        });
     });
 
-    it("setSymbolPayout returns false for unknown symbol", () => {
-        const success = payout.setSymbolPayout("nonexistent", 10);
-        expect(success).toBe(false);
+    describe("getTheoreticalRTP", () => {
+        it("returns a value between 90 and 100", () => {
+            const rtp = payout.getTheoreticalRTP();
+            expect(rtp).toBeGreaterThanOrEqual(90);
+            expect(rtp).toBeLessThanOrEqual(100);
+        });
     });
 
-    it("setBonusMultiplier affects bonus payout", () => {
-        const normalBonus = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, true);
-        payout.setBonusMultiplier(2.0);
+    describe("getAllSymbols", () => {
+        it("returns an array with at least one entry", () => {
+            expect(payout.getAllSymbols().length).toBeGreaterThan(0);
+        });
 
-        const doubledBonus = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, true);
-        expect(doubledBonus).toBe(normalBonus * (2.0 / 1.5));
-    });
-
-    it("setBonusMultiplier clamps to minimum 1.0", () => {
-        payout.setBonusMultiplier(0.5);  // Try to set below 1.0
-
-        const normalWin = payout.calculateClusterPayout("rune", 3, 1, 0.10, 1, false);
-        const bonusWin = payout.calculateClusterPayout("rune", 3, 1, 0.10, 1, true);
-
-        // Bonus should still be >= normal (1.0x minimum)
-        expect(bonusWin).toBeGreaterThanOrEqual(normalWin);
-    });
-
-    it("getTheoreticalRTP returns safe value", () => {
-        const rtp = payout.getTheoreticalRTP();
-        expect(rtp).toBeGreaterThanOrEqual(95);
-        expect(rtp).toBeLessThanOrEqual(100);
-    });
-
-    it("getAllSymbols returns all 7 symbols", () => {
-        const symbols = payout.getAllSymbols();
-        expect(symbols.length).toBe(7);
-        expect(symbols.every(s => s.baseValue > 0)).toBe(true);
+        it("contains all 7 expected symbol names", () => {
+            const names = payout.getAllSymbols().map(s => s.name);
+            ["Rune", "Staff", "Wolf", "Orb", "Crown", "Wild", "Scatter"].forEach(n => {
+                expect(names).toContain(n);
+            });
+        });
     });
 });

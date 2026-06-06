@@ -1,10 +1,83 @@
-body {
+body, html {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-  background: #070b14;
-  font-family: Arial, sans-serif;
+  background-color: #070b14;
+  font-family: sans-serif;
 }
 
+/* FIX VOOR PLAYWRIGHT */
 canvas {
-  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none !important;
+}
+
+/* Overlay styling */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+}
+
+.overlay-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999;
+  font-size: 4rem;
+  font-weight: bold;
+  text-align: center;
+  pointer-events: none;
+  display: none;
+}
+
+/* HUD (Bovenaan) */
+.hud-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  box-sizing: border-box;
+}
+
+/* CONTROL PANEL (Onderaan) */
+.control-panel {
+  position: absolute;
+  bottom: 0; /* FIX: Moet onderaan staan, niet top: 0 */
+  left: 0;
+  right: 0;
+  z-index: 100;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-around; /* Verdeelt de 3 groepen gelijkmatig */
+  align-items: center;
+}
+
+.stats-panel {
+  min-width: 220px;
+  backdrop-filter: blur(8px);
+}
+
+.spin-container .btn-lg {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  transition: transform 0.1s;
+}
+
+.spin-container .btn-lg:active {
+  transform: scale(0.9);
+}
+
+/* Zorg dat alle UI elementen klikbaar blijven */
+button, .stats-panel, .top-controls {
+  pointer-events: auto !important;
 }
