@@ -1,87 +1,68 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>loki-the-treacherous-god</title>
-  </head>
-  <body>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="src/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loki The Treacherous God</title>
+</head>
+<body>
 
-    <div id="loadingScreen" class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center bg-dark text-white" style="z-index: 9999;">
-      <h1>
-        LOKI THE TRICKSTER GOD
-      </h1>
-    </div>
+<!-- 1. OVERLAYS -->
+<div id="loadingScreen" class="overlay d-flex justify-content-center align-items-center bg-dark text-white">
+  <h1 class="display-1 fw-bold">LOKI<br><small class="fs-4 text-secondary">THE TRICKSTER GOD</small></h1>
+</div>
 
-    <div id="bigWinText" class="position-absolute top-50 start-50 translate-middle text-warning fw-bold"
-         style="
-            font-size: 72px;
-            display: none;
-            z-index: 999;">
-      BIG WIN
-    </div>
+<!-- Deze elementen worden door UIManager.ts aangemaakt als ze niet bestaan,
+     maar we zetten ze hier alvast voor de styling -->
+<div id="currentWinText" class="overlay-text text-warning"></div>
+<div id="statusText" class="overlay-text text-white"></div>
 
-    <div id="maxWinText" class="position-absolute top-50 start-50 translate-middle text-danger fw-bold"
-          style="
-            font-size: 100px;
-            display: none;
-            z-index: 999;">
-      MAX WIN
-    </div>
+<!-- 2. HUD (Bovenaan) -->
+<header class="hud-top d-flex justify-content-between align-items-start p-3">
 
-    <button id="spinBtn" class="btn btn-success position-absolute top-0 start-0 m-3">
+  <!-- Linksboven: De Stats Panel -->
+  <div id="uiPanel" class="stats-panel bg-dark bg-opacity-75 p-3 rounded border border-secondary text-white">
+    <div class="mb-1"><small class="text-secondary d-block">BALANCE</small><span id="balanceText">Balance: €1000.00</span></div>
+    <div class="mb-1"><small class="text-secondary d-block">BET</small><span id="betText">Bet: €0.10</span></div>
+    <div class="mb-1"><small class="text-secondary d-block">MULTIPLIER</small><span id="multiplierText">Multiplier: x1</span></div>
+    <div class="mb-1"><small class="text-secondary d-block">FREE SPINS</small><span id="freeSpinsText"></span></div>
+    <div id="bonusActiveText" class="badge bg-secondary mt-2">BONUS INACTIVE</div>
+  </div>
+
+  <!-- Rechtsboven: Extra knoppen -->
+  <div class="top-controls d-flex flex-column gap-2">
+    <button id="turboBtn" class="btn btn-outline-light btn-sm">TURBO OFF</button>
+    <button id="autoPlayBtn" class="btn btn-outline-light btn-sm">AUTO PLAY</button>
+  </div>
+</header>
+
+<!-- 3. CONTROL PANEL (Onderaan) -->
+<!-- Verwijder justify-content-center en align-items-end, de CSS regelt dit nu netjes -->
+<footer class="control-panel p-4">
+
+  <!-- Inzet regelen (Links) -->
+  <div class="bet-controls d-flex align-items-center bg-dark bg-opacity-50 rounded-pill p-1 px-3">
+    <button id="betMinusBtn" class="btn btn-danger rounded-circle p-2 px-3">-</button>
+    <button id="betPlusBtn" class="btn btn-primary rounded-circle p-2 px-3">+</button>
+  </div>
+
+  <!-- De grote Spin knop (Midden) -->
+  <div class="spin-container">
+    <button id="spinBtn" class="btn btn-success btn-lg shadow-lg px-5 py-3 fw-bold border-3 border-white">
       SPIN
     </button>
+  </div>
 
-    <button id="buyBonusBtn" class="btn btn-warning position-absolute top-0 start-50 translate-middle-x mt-3">
+  <!-- Bonus kopen (Rechts) -->
+  <div class="bonus-controls">
+    <button id="buyBonusBtn" class="btn btn-warning fw-bold shadow-sm px-4 py-2">
       BUY BONUS
     </button>
+  </div>
+</footer>
 
-    <div class="position-absolute top-0 start-50 translate-middle-x mt-5">
-
-      <button id="betMinusBtn" class="btn btn-danger">
-        -
-      </button>
-
-      <button id="betPlusBtn" class="btn btn-primary">
-        +
-      </button>
-
-    </div>
-
-    <button id="autoPlayBtn" class="btn btn-light position-absolute bottom-0 start-50 translate-middle-x mb-3">
-      AUTO PLAY
-    </button>
-
-    <button id="turboBtn" class="btn btn-danger position-absolute bottom-0 end-0 m-3">
-      TURBO OFF
-    </button>
-
-    <div id="uiPanel" class="position-absolute top-0 end-0 m-3 text-white">
-
-      <div id="balanceText">
-        Balance: €1000.00
-      </div>
-
-      <div id="betText">
-        Bet: €0.10
-      </div>
-
-      <div id="multiplierText">
-        Multiplier: x1
-      </div>
-
-      <div id="freeSpinsText">
-        Free Spins: 0
-      </div>
-
-      <div id="bonusActiveText">
-        BONUS INACTIVE
-      </div>
-
-    </div>
-
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+<script type="module" src="/src/main.ts"></script>
+</body>
 </html>

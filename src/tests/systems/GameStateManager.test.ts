@@ -1,154 +1,202 @@
-import {beforeEach, describe, expect, it} from "vitest";
-import {GameState, GameStateManager} from "../../game/systems/GameStateManager.ts";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { GameStateManager, GameState } from "../../game/systems/GameStateManager.ts";
 
 describe("GameStateManager", () => {
-    let stateManager: GameStateManager;
+    let manager: GameStateManager;
 
     beforeEach(() => {
-        stateManager = new GameStateManager();
+        manager = new GameStateManager();
     });
 
-    it("initializes in IDLE state", () => {
-        expect(stateManager.getState()).toBe(GameState.IDLE);
-    })
-
-    it("isState checks current state", () => {
-        expect(stateManager.isState(GameState.IDLE)).toBe(true);
-        expect(stateManager.isState(GameState.SPINNING)).toBe(false);
-    })
-
-    it("isSpinning is convenience method", () => {
-        expect(stateManager.isSpinning()).toBe(false);
-        expect(stateManager.isIdle()).toBe(true);
-    })
-
-    it("IDLE -> SPINNING transition is valid", () => {
-        const success = stateManager.setState(GameState.SPINNING);
-        expect(success).toBe(true);
-        expect(stateManager.getState()).toBe(GameState.SPINNING);
-    });
-
-    it("SPINNING -> RESOLVING_WINS transition is valid", () => {
-        stateManager.setState(GameState.SPINNING);
-        const success = stateManager.setState(GameState.RESOLVING_WINS);
-        expect(success).toBe(true);
-    });
-
-    it("RESOLVING_ACTIVE -> SPINNING transition is valid", () => {
-        stateManager.setState(GameState.SPINNING);
-        stateManager.setState(GameState.RESOLVING_WINS);
-        stateManager.setState(GameState.BONUS_ACTIVE);
-        const success =stateManager.setState(GameState.SPINNING);
-        expect(success).toBe(true);
-    });
-
-    it("SPINNING -> SPINNING is invalid", () => {
-        stateManager.setState(GameState.SPINNING);
-        const success = stateManager.setState(GameState.SPINNING);
-        expect(success).toBe(false);
-    });
-
-    it("SPINNING -> IDLE skips RESOLVING_WINS", () => {
-        stateManager.setState(GameState.SPINNING);
-        const success = stateManager.setState(GameState.IDLE);
-        expect(success).toBe(true);
-    });
-
-    it("BONUS_ACTIVE -> IDLE is valid", () => {
-        stateManager.setState(GameState.SPINNING);
-        stateManager.setState(GameState.RESOLVING_WINS);
-        stateManager.setState(GameState.BONUS_ACTIVE);
-        const success = stateManager.setState(GameState.IDLE);
-        expect(success).toBe(true);
-    });
-
-    it("GAME_OVER -> any non-IDLE is invalid", () => {
-        stateManager.setState(GameState.SPINNING);
-        stateManager.setState(GameState.GAME_OVER);
-        expect(stateManager.setState(GameState.SPINNING)).toBe(false);
-        expect(stateManager.setState(GameState.IDLE)).toBe(true);
-    });
-
-    it("tracks state history", () => {
-        stateManager.setState(GameState.SPINNING);
-        stateManager.setState(GameState.RESOLVING_WINS);
-        stateManager.setState(GameState.IDLE);
-
-        const history = stateManager.getHistory();
-        expect(history).toContain(GameState.IDLE);
-        expect(history).toContain(GameState.SPINNING);
-        expect(history).toContain(GameState.RESOLVING_WINS);
-    });
-
-    it("getLastState returns previous state", () => {
-        stateManager.setState(GameState.SPINNING);
-        const last1 = stateManager.getLastState();
-
-        stateManager.setState(GameState.RESOLVING_WINS);
-        const last2 = stateManager.getLastState();
-
-        expect(last1).toBe(GameState.IDLE);
-        expect(last2).toBe(GameState.SPINNING);
-    });
-
-    it("onStateChange callback fires when state changes", () => {
-        let callCount = 0;
-        stateManager.onStateChange(GameState.SPINNING, () => {
-            callCount++;
+    describe("initial state", () => {
+        it("starts in IDLE", () => {
+            expect(manager.getState()).toBe(GameState.IDLE);
         });
 
-        expect(callCount).toBe(0);
-        stateManager.setState(GameState.SPINNING);
-        expect(callCount).toBe(1);
+        it("isIdle() returns true at start", () => {
+            expect(manager.isIdle()).toBe(true);
+        });
+
+        it("isSpinning() returns false at start", () => {
+            expect(manager.isSpinning()).toBe(false);
+        });
+
+        it("history is empty at start", () => {
+            expect(manager.getHistory()).toHaveLength(0);
+        });
+
+        it("getLastState() returns null at start", () => {
+            expect(manager.getLastState()).toBeNull();
+        });
     });
 
-    it("multiple listeners can be registered", () => {
-        let count1 = 0;
-        let count2 = 0;
+    describe("valid transitions", () => {
+        it("IDLE → SPINNING", () => {
+            expect(manager.setState(GameState.SPINNING)).toBe(true);
+            expect(manager.getState()).toBe(GameState.SPINNING);
+        });
 
-        stateManager.onStateChange(GameState.IDLE, () => count1++);
-        stateManager.onStateChange(GameState.IDLE, () => count2++);
+        it("IDLE → GAME_OVER", () => {
+            expect(manager.setState(GameState.GAME_OVER)).toBe(true);
+        });
 
-        stateManager.setState(GameState.SPINNING);
-        stateManager.setState(GameState.IDLE);
+        it("SPINNING → RESOLVING_WINS", () => {
+            manager.setState(GameState.SPINNING);
+            expect(manager.setState(GameState.RESOLVING_WINS)).toBe(true);
+        });
 
-        expect(count1).toBe(1);
-        expect(count2).toBe(1);
+        it("SPINNING → IDLE", () => {
+            manager.setState(GameState.SPINNING);
+            expect(manager.setState(GameState.IDLE)).toBe(true);
+        });
+
+        it("RESOLVING_WINS → IDLE", () => {
+            manager.setState(GameState.SPINNING);
+            manager.setState(GameState.RESOLVING_WINS);
+            expect(manager.setState(GameState.IDLE)).toBe(true);
+        });
+
+        it("RESOLVING_WINS → BONUS_ACTIVE", () => {
+            manager.setState(GameState.SPINNING);
+            manager.setState(GameState.RESOLVING_WINS);
+            expect(manager.setState(GameState.BONUS_ACTIVE)).toBe(true);
+        });
+
+        it("BONUS_ACTIVE → SPINNING", () => {
+            manager.setState(GameState.SPINNING);
+            manager.setState(GameState.RESOLVING_WINS);
+            manager.setState(GameState.BONUS_ACTIVE);
+            expect(manager.setState(GameState.SPINNING)).toBe(true);
+        });
+
+        it("GAME_OVER → IDLE", () => {
+            manager.setState(GameState.GAME_OVER);
+            expect(manager.setState(GameState.IDLE)).toBe(true);
+        });
     });
 
-    it("listeners only fire for their registered state", () => {
-        let idleCount = 0;
-        let spinCount = 0;
+    describe("invalid transitions", () => {
+        it("returns false when already in the same state", () => {
+            expect(manager.setState(GameState.IDLE)).toBe(false);
+        });
 
-        stateManager.onStateChange(GameState.IDLE, () => idleCount++);
-        stateManager.onStateChange(GameState.SPINNING, () => spinCount++);
+        it("IDLE cannot go directly to RESOLVING_WINS", () => {
+            expect(manager.setState(GameState.RESOLVING_WINS)).toBe(false);
+        });
 
-        stateManager.setState(GameState.SPINNING);
-        expect(idleCount).toBe(0);
-        expect(spinCount).toBe(1);
+        it("IDLE cannot go directly to BONUS_ACTIVE", () => {
+            expect(manager.setState(GameState.BONUS_ACTIVE)).toBe(false);
+        });
 
-        stateManager.setState(GameState.IDLE);
-        expect(idleCount).toBe(1);
-        expect(spinCount).toBe(1);
+        it("SPINNING cannot go directly to BONUS_ACTIVE", () => {
+            manager.setState(GameState.SPINNING);
+            expect(manager.setState(GameState.BONUS_ACTIVE)).toBe(false);
+        });
+
+        it("GAME_OVER cannot go directly to SPINNING", () => {
+            manager.setState(GameState.GAME_OVER);
+            expect(manager.setState(GameState.SPINNING)).toBe(false);
+        });
+
+        it("state does not change on invalid transition", () => {
+            manager.setState(GameState.RESOLVING_WINS);
+            expect(manager.getState()).toBe(GameState.IDLE);
+        });
     });
 
-    it("supports complete game flow", () => {
-        expect(stateManager.isIdle()).toBe(true);
-        expect(stateManager.setState(GameState.SPINNING)).toBe(true);
-        expect(stateManager.isSpinning()).toBe(true);
-        expect(stateManager.setState(GameState.RESOLVING_WINS)).toBe(true);
-        expect(stateManager.setState(GameState.BONUS_ACTIVE)).toBe(true);
-        expect(stateManager.setState(GameState.SPINNING)).toBe(true);
-        expect(stateManager.setState(GameState.IDLE)).toBe(true);
-        expect(stateManager.isIdle()).toBe(true)
+    describe("history", () => {
+        it("records the previous state after a valid transition", () => {
+            manager.setState(GameState.SPINNING);
+            expect(manager.getHistory()).toContain(GameState.IDLE);
+        });
+
+        it("builds up history across multiple transitions", () => {
+            manager.setState(GameState.SPINNING);
+            manager.setState(GameState.IDLE);
+            expect(manager.getHistory()).toHaveLength(2);
+        });
+
+        it("getLastState() returns the most recent previous state", () => {
+            manager.setState(GameState.SPINNING);
+            expect(manager.getLastState()).toBe(GameState.IDLE);
+        });
+
+        it("returns a copy so history cannot be mutated from outside", () => {
+            manager.setState(GameState.SPINNING);
+            const history = manager.getHistory();
+            history.push(GameState.GAME_OVER);
+            expect(manager.getHistory()).toHaveLength(1);
+        });
+
+        it("does not add to history on a failed transition", () => {
+            manager.setState(GameState.BONUS_ACTIVE);
+            expect(manager.getHistory()).toHaveLength(0);
+        });
     });
 
-    it("supports multiple spins in a row ", () => {
-        for(let i = 0; i < 5; i++) {
-            expect(stateManager.setState(GameState.SPINNING)).toBe(true);
-            expect(stateManager.setState(GameState.IDLE)).toBe(true);
-        }
+    describe("helper methods", () => {
+        it("isState() returns true for the current state", () => {
+            expect(manager.isState(GameState.IDLE)).toBe(true);
+        });
 
-        expect(stateManager.getHistory().length).toBeGreaterThan(5);
-    })
+        it("isState() returns false for a different state", () => {
+            expect(manager.isState(GameState.SPINNING)).toBe(false);
+        });
+
+        it("isSpinning() returns true when spinning", () => {
+            manager.setState(GameState.SPINNING);
+            expect(manager.isSpinning()).toBe(true);
+        });
+
+        it("isBonusActive() returns true in bonus state", () => {
+            manager.setState(GameState.SPINNING);
+            manager.setState(GameState.RESOLVING_WINS);
+            manager.setState(GameState.BONUS_ACTIVE);
+            expect(manager.isBonusActive()).toBe(true);
+        });
+
+        it("isGameOver() returns true in game over state", () => {
+            manager.setState(GameState.GAME_OVER);
+            expect(manager.isGameOver()).toBe(true);
+        });
+
+        it("isResolvingWins() returns true when resolving", () => {
+            manager.setState(GameState.SPINNING);
+            manager.setState(GameState.RESOLVING_WINS);
+            expect(manager.isResolvingWins()).toBe(true);
+        });
+    });
+
+    describe("onStateChange listeners", () => {
+        it("fires the callback when entering the subscribed state", () => {
+            const cb = vi.fn();
+            manager.onStateChange(GameState.SPINNING, cb);
+            manager.setState(GameState.SPINNING);
+            expect(cb).toHaveBeenCalledOnce();
+        });
+
+        it("does not fire for a different state", () => {
+            const cb = vi.fn();
+            manager.onStateChange(GameState.GAME_OVER, cb);
+            manager.setState(GameState.SPINNING);
+            expect(cb).not.toHaveBeenCalled();
+        });
+
+        it("fires multiple callbacks for the same state", () => {
+            const cb1 = vi.fn();
+            const cb2 = vi.fn();
+            manager.onStateChange(GameState.SPINNING, cb1);
+            manager.onStateChange(GameState.SPINNING, cb2);
+            manager.setState(GameState.SPINNING);
+            expect(cb1).toHaveBeenCalledOnce();
+            expect(cb2).toHaveBeenCalledOnce();
+        });
+
+        it("does not fire on an invalid transition", () => {
+            const cb = vi.fn();
+            manager.onStateChange(GameState.BONUS_ACTIVE, cb);
+            manager.setState(GameState.BONUS_ACTIVE);
+            expect(cb).not.toHaveBeenCalled();
+        });
+    });
 });
