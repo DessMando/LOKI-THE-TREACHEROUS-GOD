@@ -134,15 +134,11 @@ export class UIManager {
     public enableSpinButton(): void {
         if (!this.spinButton) return;
         this.spinButton.disabled = false;
-        this.spinButton.classList.add("btn-secondary");
-        this.spinButton.classList.remove("btn-success")
     }
 
     public disableSpinButton(): void {
         if (!this.spinButton) return;
         this.spinButton.disabled = true;
-        this.spinButton.classList.add("btn-secondary");
-        this.spinButton.classList.remove("btn-success");
     }
 
     public enableBetButtons(): void {
