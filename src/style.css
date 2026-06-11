@@ -50,12 +50,9 @@ canvas {
   align-items: flex-start;
 
   z-index: 100;
-}
-
-.top-controls {
+  box-sizing: border-box;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  justify-content: space-between;
 }
 
 /* CONTROL PANEL (Onderaan) */
@@ -64,10 +61,11 @@ canvas {
   bottom: 25px;
   left: 40px;
   right: 40px;
+
   z-index: 100;
-  box-sizing: border-box;
+
   display: flex;
-  justify-content: space-around; /* Verdeelt de 3 groepen gelijkmatig */
+  justify-content: space-between;
   align-items: center;
 }
 
@@ -133,7 +131,9 @@ canvas {
   content: "";
   position: absolute;
   inset: 8px;
+
   border-radius: 50%;
+
   border: 2px solid rgba(245,215,142,.6);
 }
 
@@ -307,4 +307,15 @@ canvas {
 
 @keyframes loadFill {
   to { width: 100%; }
+}
+
+/* Zorg dat alle UI elementen klikbaar blijven */
+button, .stats-panel, .top-controls {
+  pointer-events: auto !important;
+}
+
+.top-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }

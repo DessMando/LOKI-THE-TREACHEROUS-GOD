@@ -111,7 +111,6 @@ export class UIManager {
 
         if (count > 0 ) {
             this.freeSpinsElement.textContent = count.toString();
-            this.freeSpinsElement.style.color = "#34d399";
             this.freeSpinsElement.style.display = "block";
         } else {
             this.freeSpinsElement.style.display = "none";
@@ -123,11 +122,9 @@ export class UIManager {
 
         if (isActive) {
             this.bonusStatusElement.textContent = "BONUS ACTIVE";
-            this.bonusStatusElement.style.color = "#ff6600";
             this.addAnimation(this.bonusStatusElement, "pulse");
         } else {
             this.bonusStatusElement.textContent = "BONUS INACTIVE";
-            this.bonusStatusElement.style.color = "#9ca3af";
             this.bonusStatusElement.classList.remove("pulse");
         }
     }
