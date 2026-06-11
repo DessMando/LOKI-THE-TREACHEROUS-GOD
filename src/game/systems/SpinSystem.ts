@@ -13,14 +13,13 @@ export class SpinSystem {
     }
 
     public createGrid(symbols: Symbol[][], getRandomSymbol: () => any, container: any): void {
-        const { Symbol: SymbolClass } = require("../core/Symbol.ts");
 
         for (let row = 0; row < ROWS; row++) {
             if (!symbols[row]) symbols[row] = [];
 
             for (let col = 0; col < COLS; col++) {
                 const type = getRandomSymbol();
-                const symbol = new SymbolClass(type, row, col);
+                const symbol = new Symbol(type, row, col);
 
                 const x = this.GRID_START_X + col * this.SYMBOL_SIZE;
                 const y = this.GRID_START_Y + row * this.SYMBOL_SIZE;
@@ -28,13 +27,13 @@ export class SpinSystem {
                 symbol.setPosition(x, y);
 
                 container.addChild(symbol.sprite);
-                symbol[row][col] = symbol;
+                symbols[row][col] = symbol;
             }
         }
     }
 
     public clearGrid(symbols: Symbol[][], container: any): void {
-        container.removeChild();
+        container.removeChildren();
         symbols.length = 0;
     }
 

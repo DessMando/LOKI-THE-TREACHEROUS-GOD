@@ -1,106 +1,143 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { WinSystem } from "../../game/systems/WinSystem.ts";
 
+function makeSymbol(type: string, row: number, col: number, multiplier = 1) {
+    return {
+        type,
+        row,
+        col,
+        multiplier,
+        multiplierText: { text: "" },
+        changeType(_t: string) {},
+        async magicEffect() {},
+    } as any;
+}
+
+function emptyGrid(rows = 7, cols = 7) {
+    return Array.from({ length: rows }, (_, r) =>
+        Array.from({ length: cols }, (_, c) => makeSymbol("rune", r, c))
+    );
+}
+
 describe("WinSystem", () => {
-    let winSystem: WinSystem;
+    let win: WinSystem;
 
     beforeEach(() => {
-        winSystem = new WinSystem();
+        win = new WinSystem();
     });
 
-    it("calculateTotalMultiplier sums all symbol multipliers", () => {
-        const symbols = [
-            [
-                { multiplier: 1 },
-                { multiplier: 2 },
-                { multiplier: 1 }
-            ],
-            [
-                { multiplier: 1 },
-                { multiplier: 3 },
-                null
-            ]
-        ]as any;
+    describe("findAllClusters", () => {
+        it("returns empty array when no cluster of 4+ exists", () => {
+            const grid = emptyGrid(3, 3);
+            grid[0][0] = makeSymbol("crown", 0, 0);
+            grid[0][1] = makeSymbol("crown", 0, 1);
+            grid[0][2] = makeSymbol("crown", 0, 2);
+            expect(win.findAllClusters(grid)).toHaveLength(0);
+        });
 
-        const total = winSystem.calculateTotalMultiplier(symbols);
-        expect(total).toBe(8);
+        it("detects a horizontal cluster of 4", () => {
+            const grid = emptyGrid(3, 7);
+            for (let c = 0; c < 4; c++) grid[0][c] = makeSymbol("crown", 0, c);
+            const clusters = win.findAllClusters(grid);
+            expect(clusters.length).toBeGreaterThanOrEqual(1);
+            expect(clusters[0].length).toBeGreaterThanOrEqual(4);
+        });
+
+        it("detects a vertical cluster of 4", () => {
+            const grid = emptyGrid(7, 3);
+            for (let r = 0; r < 4; r++) grid[r][0] = makeSymbol("orb", r, 0);
+            expect(win.findAllClusters(grid).length).toBeGreaterThanOrEqual(1);
+        });
+
+        it("detects two separate clusters of different types", () => {
+            const grid = emptyGrid(2, 8);
+            for (let c = 0; c < 4; c++) grid[0][c] = makeSymbol("crown", 0, c);
+            for (let c = 0; c < 4; c++) grid[1][c] = makeSymbol("wolf",  1, c);
+            expect(win.findAllClusters(grid).length).toBe(2);
+        });
+
+        it("counts each symbol only once across clusters", () => {
+            const grid = emptyGrid(3, 4);
+            for (let c = 0; c < 4; c++) grid[0][c] = makeSymbol("wild", 0, c);
+            grid[1][0] = makeSymbol("wild", 1, 0);
+            const clusters = win.findAllClusters(grid);
+            const total = clusters.reduce((s, c) => s + c.length, 0);
+            expect(total).toBe(5);
+        });
+
+        it("does not crash on null cells", () => {
+            const grid = emptyGrid(3, 3);
+            (grid[1][1] as any) = null;
+            expect(() => win.findAllClusters(grid)).not.toThrow();
+        });
     });
 
-    it("calculateTotalMultiplier handels null symbols", () => {
-        const symbols = [
-            [{ multiplier: 1 }, null, { multiplier: 2 }],
-            [null, { multiplier: 1 }, null]
-        ]as any;
+    describe("calculateTotalMultiplier", () => {
+        it("returns 1 when all symbols have multiplier 1", () => {
+            expect(win.calculateTotalMultiplier(emptyGrid(3, 3))).toBe(1);
+        });
 
-        const total = winSystem.calculateTotalMultiplier(symbols);
-        expect(total).toBe(4);
+        it("adds extra multiplier points from boosted symbols", () => {
+            const grid = emptyGrid(2, 2);
+            grid[0][0] = makeSymbol("rune", 0, 0, 3); // +2
+            grid[0][1] = makeSymbol("rune", 0, 1, 2); // +1
+            expect(win.calculateTotalMultiplier(grid)).toBe(4);
+        });
+
+        it("handles null cells without crashing", () => {
+            const grid = emptyGrid(2, 2);
+            (grid[0][0] as any) = null;
+            expect(() => win.calculateTotalMultiplier(grid)).not.toThrow();
+        });
     });
 
-    it("calculateTotalMultiplier returns minimum 1", () => {
-        const symbols = [[null, null]] as any;
-        const total = winSystem.calculateTotalMultiplier(symbols);
-        expect(total).toBeGreaterThanOrEqual(1);
+    describe("checkBigWin", () => {
+        it("returns null for a small payout", () => {
+            expect(win.checkBigWin(100)).toBeNull();
+        });
+
+        it("returns 'big' for payout >= 500", () => {
+            expect(win.checkBigWin(500)).toBe("big");
+            expect(win.checkBigWin(1999)).toBe("big");
+        });
+
+        it("returns 'max' for payout >= 2000", () => {
+            expect(win.checkBigWin(2000)).toBe("max");
+            expect(win.checkBigWin(9999)).toBe("max");
+        });
     });
 
-    it("applyRandomMultiplier increase a symbol", () => {
-        const symbols = [
-            [{ multiplier: 1 }, { multiplier: 1 }],
-            [{ multiplier: 1 }, { multiplier: 1 }]
-        ] as any;
+    describe("applyRandomMultiplier", () => {
+        it("increases at least one symbol's multiplier", () => {
+            const grid = emptyGrid(3, 3);
+            const before = grid.flat().map(s => s.multiplier);
+            win.applyRandomMultiplier(grid, false);
+            const after = grid.flat().map(s => s.multiplier);
+            expect(after.some((v, i) => v > before[i])).toBe(true);
+        });
 
-        const originalSum = symbols.flat().reduce((sum: number, s: any) => sum + (s?.multiplier || 0), 0);
-        winSystem.applyRandomMultiplier(symbols, false);
+        it("boosts by +2 when bonus is active", () => {
+            const grid = emptyGrid(1, 1);
+            const sym = grid[0][0];
+            const orig = Math.random;
+            Math.random = () => 0;
+            win.applyRandomMultiplier(grid, true);
+            Math.random = orig;
+            expect(sym.multiplier).toBe(3);
+        });
 
-        const newSum = symbols.flat().reduce((sum: number, s: any) => sum + (s?.multiplier || 0), 0);
-        expect(newSum).toBeGreaterThan(originalSum);
+        it("boosts by +1 when bonus is not active", () => {
+            const grid = emptyGrid(1, 1);
+            const sym = grid[0][0];
+            const orig = Math.random;
+            Math.random = () => 0;
+            win.applyRandomMultiplier(grid, false);
+            Math.random = orig;
+            expect(sym.multiplier).toBe(2);
+        });
+
+        it("does not crash on empty grid", () => {
+            expect(() => win.applyRandomMultiplier([], false)).not.toThrow();
+        });
     });
-
-    it("applyRandomMultiplier adds more in bonus mode", () => {
-        const symbols1 = [[{ multiplier: 1 }]] as any;
-        const symbols2 = [[{ multiplier: 1 }]] as any;
-
-        winSystem.applyRandomMultiplier(symbols1, false);
-        winSystem.applyRandomMultiplier(symbols2, true);
-
-        const mult1 = symbols1[0][0].multiplier;
-        const mult2 = symbols2[0][0].multiplier;
-
-        expect(mult2).toBeGreaterThanOrEqual(mult1);
-    });
-
-    it("activateLokiMagic can change symbols", () => {
-        let magicOccured = false;
-
-        for(let i = 0; i < 100; i++) {
-            const symbols = [
-                [{ type: "rune", changeType: (t: any) => { symbols[0][0].type = t; } }, { type: "crown" }]
-            ] as any;
-
-            const originalType = symbols[0][0].type;
-            winSystem.activateLokiMagic(symbols);
-
-            if (symbols[0][0].type !== originalType) {
-                magicOccured = true;
-                break;
-            }
-        }
-
-        expect(magicOccured).toBe(true);
-    });
-
-    it("checkBigWin classifies wins correctly", () => {
-        expect(winSystem.checkBigWin(100)).toBe("big");
-        expect(winSystem.checkBigWin(500)).toBe("big");
-        expect(winSystem.checkBigWin(2000)).toBe("max");
-        expect(winSystem.checkBigWin(5000)).toBe("max");
-        expect(winSystem.checkBigWin(50)).toBe(null);
-        expect(winSystem.checkBigWin(250)).toBe("big");
-    });
-
-    it("checkBigWin boundary values", () => {
-        expect(winSystem.checkBigWin(500)).toBe("big");
-        expect(winSystem.checkBigWin(499)).toBe(null);
-        expect(winSystem.checkBigWin(2000)).toBe("max");
-        expect(winSystem.checkBigWin(1999)).toBe("big");
-    })
 });

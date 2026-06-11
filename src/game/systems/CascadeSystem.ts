@@ -13,8 +13,8 @@ export class CascadeSystem {
     }
 
     public async cascade(symbols: Symbol[][], getRandomSymbol: () => any, container: any): Promise<void> {
-        await  this.dropSymbols(symbols);
-        this.refillGrid(symbols, getRandomSymbol, container);
+        await this.dropSymbols(symbols);
+        await this.refillGrid(symbols, getRandomSymbol, container);
     }
 
     private async dropSymbols(symbols: Symbol[][]): Promise<void> {
@@ -45,23 +45,25 @@ export class CascadeSystem {
         await  Promise.all(promises);
     }
 
-    private refillGrid(symbols: Symbol[][], getRandomSymbol: () => any, container: any): void {
-        const { Symbol: SymbolClass } = require("../core/Symbol.ts");
+    private async refillGrid(symbols: Symbol[][], getRandomSymbol: () => any, container: any): Promise<void> {
+        const promises: Promise<void>[] = [];
 
         for (let row = 0; row < symbols.length; row++) {
             for (let col = 0; col < symbols[row].length; col++) {
                 if (symbols[row][col] === null) {
                     const type = getRandomSymbol();
-                    const symbol = new SymbolClass(type, row, col);
+                    const symbol = new Symbol(type, row, col);
 
                     const x = this.GRID_START_X + col * this.SYMBOL_SIZE;
                     const y = this.GRID_START_Y + row * this.SYMBOL_SIZE;
 
                     symbol.setPosition(x, y - 300);
-                    symbol.moveTo(x, y, 0.5);
+                    promises.push(symbol.moveTo(x, y, 0.5));
 
                     container.addChild(symbol.sprite);
                     symbols[row][col] = symbol;
+                    await Promise.all(promises);
+
                 }
             }
         }

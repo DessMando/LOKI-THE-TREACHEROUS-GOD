@@ -143,7 +143,7 @@ export class UIManager {
 
     public enableBetButtons(): void {
         if (this.betMinusButton) this.betMinusButton.disabled = false;
-        if (this.betPlusButton) this.betPlusButton.disabled = true;
+        if (this.betPlusButton) this.betPlusButton.disabled = false;
     }
 
     public disableBetButton(): void {
@@ -175,7 +175,7 @@ export class UIManager {
         }
     }
 
-    public OnBetDecrement(callback: () => void): void {
+    public onBetDecrement(callback: () => void): void {
         if (this.betMinusButton) {
             this.betMinusButton.addEventListener("click", callback);
         }

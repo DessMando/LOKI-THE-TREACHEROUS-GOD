@@ -102,24 +102,15 @@ export class Game {
             return;
         }
 
-<<<<<<< Updated upstream
-=======
-
-
         this.ui.lockUI();
         this.sound.playSpin();
 
->>>>>>> Stashed changes
         const deductSuccess = await this.betting.deductBet();
         if (!deductSuccess) {
             console.error("❌ Onvoldoende saldo!");
             this.gameState.setState(GameState.GAME_OVER);
-            this.ui.lockUI();
             return;
         }
-
-        this.ui.lockUI();
-        this.sound.playSpin();
 
         try {
             await this.grid.spin();

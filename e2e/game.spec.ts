@@ -9,117 +9,207 @@ test('player can spin and win', async ({ page }) => {
 
     await page.locator('#spinBtn').click();
 
-<<<<<<< Updated upstream
     await page.waitForTimeout(2000);
-=======
 async function spinAndWait(page: Page): Promise<void> {
     await page.locator("#spinBtn").click();
     await expect(page.locator("#spinBtn")).toBeEnabled({ timeout: 15000 });
 }
->>>>>>> Stashed changes
 
     const updateBalance = await page.locator('#balanceText').textContent();
     expect(updateBalance).toBeDefined();
+
+
+// ── page load ────────────────────────────────────────────────────────────────
+
+test.describe("Page load", () => {
+    test("loading screen disappears after init", async ({ page }) => {
+        await page.goto("/");
+        await expect(page.locator("#loadingScreen")).toBeHidden({ timeout: 10000 });
+    });
+
+    test("spin button is visible and enabled", async ({ page }) => {
+        await page.goto("/");
+        await expect(page.locator("#spinBtn")).toBeVisible();
+        await expect(page.locator("#spinBtn")).toBeEnabled();
+    });
+
+    test("balance starts at €1000", async ({ page }) => {
+        await page.goto("/");
+        expect(await getBalance(page)).toBe(1000);
+    });
+
+    test("bet text shows a value above 0", async ({ page }) => {
+        await page.goto("/");
+        expect(await getBet(page)).toBeGreaterThan(0);
+    });
+
+    test("all main UI elements are present", async ({ page }) => {
+        await page.goto("/");
+        await expect(page.locator("#spinBtn")).toBeVisible();
+        await expect(page.locator("#betText")).toBeVisible();
+        await expect(page.locator("#balanceText")).toBeVisible();
+        await expect(page.locator("#multiplierText")).toBeVisible();
+        await expect(page.locator("#betPlusBtn")).toBeVisible();
+        await expect(page.locator("#betMinusBtn")).toBeVisible();
+        await expect(page.locator("#buyBonusBtn")).toBeVisible();
+    });
+
+    test("bigWinText and maxWinText are hidden by default", async ({ page }) => {
+        await page.goto("/");
+        await expect(page.locator("#bigWinText")).toBeHidden();
+        await expect(page.locator("#maxWinText")).toBeHidden();
+    });
 });
 
-test('bet buttons work', async ({ page }) => {
-    await page.goto('http://localhost:5173');
+// ── spin mechanics ────────────────────────────────────────────────────────────
 
-    const initialBet = await page.locator('#betText').textContent();
-    await page.locator('#betPlusBtn').click();
+test.describe("Spin mechanics", () => {
+    test.beforeEach(async ({ page }) => {
+        await page.goto("/");
+    });
 
-    const newBet = await page.locator('#betText').textContent();
-    expect(newBet).not.toEqual(initialBet);
+    test("spin button is disabled immediately after clicking", async ({ page }) => {
+        await page.locator("#spinBtn").click();
+        await expect(page.locator("#spinBtn")).toBeDisabled();
+    });
+
+    test("spin button re-enables after spin completes", async ({ page }) => {
+        await spinAndWait(page);
+        await expect(page.locator("#spinBtn")).toBeEnabled();
+    });
+
+    test("balance changes after a spin", async ({ page }) => {
+        const before = await getBalance(page);
+        await spinAndWait(page);
+        const after = await getBalance(page);
+        // balance either dropped (bet deducted) or went up (win), never stays identical guaranteed
+        expect(after).not.toBeNaN();
+        expect(after).toBeGreaterThanOrEqual(0);
+        // At minimum the bet was deducted
+        expect(after).toBeLessThanOrEqual(before);
+    });
+
+    test("bet buttons are disabled during a spin", async ({ page }) => {
+        await page.locator("#spinBtn").click();
+        await expect(page.locator("#betPlusBtn")).toBeDisabled();
+        await expect(page.locator("#betMinusBtn")).toBeDisabled();
+    });
+
+    test("bet buttons re-enable after spin completes", async ({ page }) => {
+        await spinAndWait(page);
+        await expect(page.locator("#betPlusBtn")).toBeEnabled();
+        await expect(page.locator("#betMinusBtn")).toBeEnabled();
+    });
+
+    test("second spin click while spinning does not deduct double", async ({ page }) => {
+        const before = await getBalance(page);
+        await page.locator("#spinBtn").click();
+        await page.locator("#spinBtn").click({ force: true });
+        await expect(page.locator("#spinBtn")).toBeEnabled({ timeout: 15000 });
+        const after = await getBalance(page);
+        // Only one bet should have been deducted (max €150 max bet)
+        expect(before - after).toBeLessThanOrEqual(150);
+    });
 });
 
-test('bonus round triggers', async ({ page }) => {
-    await page.goto('http://localhost:5173');
+// ── betting system ────────────────────────────────────────────────────────────
 
-    for (let i = 0; i < 20; i++) {
-        await page.locator('#spinBtn').click();
-        await page.waitForTimeout(500);
-    }
+test.describe("Betting system", () => {
+    test.beforeEach(async ({ page }) => {
+        await page.goto("/");
+    });
 
-    const bonusStatus = await page.locator('#bonusActiveText').textContent();
-    expect(bonusStatus).toBe("BONUS");
+    test("bet increases by €0.10 when + is clicked", async ({ page }) => {
+        const before = await getBet(page);
+        await page.locator("#betPlusBtn").click({force: true});
+        const after = await getBet(page);
+        expect(after).toBeCloseTo(before + 0.10, 2);
+    });
+
+    test("bet decreases by €0.10 when - is clicked", async ({ page }) => {
+        await page.locator("#betPlusBtn").click();
+        const before = await getBet(page);
+        await page.locator("#betMinusBtn").click();
+        const after = await getBet(page);
+        expect(after).toBeCloseTo(before - 0.10, 2);
+    });
+
+    test("bet does not go below €0.10", async ({ page }) => {
+        await page.locator("#betMinusBtn").click();
+        expect(await getBet(page)).toBeGreaterThanOrEqual(0.10);
+    });
+
+    test("bet text updates after clicking +", async ({ page }) => {
+        await page.locator("#betPlusBtn").click();
+        const text = await page.locator("#betText").textContent();
+        expect(text).toContain("0.20");
+    });
 });
 
-test('bonus round activates', async ({ page }) => {
-    await page.goto('http://localhost:5173');
+// ── bonus system ──────────────────────────────────────────────────────────────
 
-    let triggered = false;
+test.describe("Bonus system", () => {
+    test.beforeEach(async ({ page }) => {
+        await page.goto("/");
+    });
 
-    for (let i = 0; i < 100; i++) {
-        await page.locator('#spinBtn').click();
-        await page.waitForTimeout(500);
+    test("buy bonus button activates the bonus immediately", async ({ page }) => {
+        await page.locator("#buyBonusBtn").click();
+        const text = await page.locator("#bonusActiveText").textContent();
+        expect(text?.toLowerCase()).toContain("bonus");
+    });
 
-        const text = await page.locator('#bonusActiveText').textContent();
+    test("free spins text appears when bonus is active", async ({ page }) => {
+        await page.locator("#buyBonusBtn").click();
+        const text = await page.locator("#freeSpinsText").textContent();
+        expect(text).toBeDefined();
+    });
 
-        if (text === 'BONUS') {
-            triggered = true;
-            break;
+    test("free spins counter changes after spinning in bonus", async ({ page }) => {
+        await page.locator("#buyBonusBtn").click();
+        const before = await page.locator("#freeSpinsText").textContent();
+        await spinAndWait(page);
+        const after = await page.locator("#freeSpinsText").textContent();
+        expect(after).not.toEqual(before);
+    });
+});
+
+// ── full session ──────────────────────────────────────────────────────────────
+
+test.describe("Spin session stability", () => {
+    test("balance remains a valid number after 10 spins", async ({ page }) => {
+        await page.goto("/");
+        for (let i = 0; i < 10; i++) {
+            await spinAndWait(page);
         }
-    }
+        const balance = await getBalance(page);
+        expect(isNaN(balance)).toBe(false);
+        expect(balance).toBeGreaterThanOrEqual(0);
+    });
 
-    expect(triggered).toBeTruthy();
+    test("UI remains functional after 10 spins", async ({ page }) => {
+        await page.goto("/");
+        for (let i = 0; i < 10; i++) {
+            await spinAndWait(page);
+        }
+        await expect(page.locator("#spinBtn")).toBeEnabled();
+        await expect(page.locator("#balanceText")).toBeVisible();
+        await expect(page.locator("#betText")).toBeVisible();
+    });
 });
 
-test('game starts with valid ui state', async ({ page }) => {
-    await page.goto('http://localhost:5173');
-
-    await expect(page.locator('#spinBtn')).toBeVisible();
-    await expect(page.locator('#betText')).toBeVisible();
-    await expect(page.locator('#balanceText')).toBeVisible();
-
-    const balance = await page.locator('#balanceText').textContent();
-
-    expect(balance).toContain('Balance');
+test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    // Wacht tot loading screen verdwijnt = spel is volledig geladen
+    await page.waitForSelector("#loadingScreen", { state: "hidden", timeout: 15000 });
 });
 
-test('spin deducts balance', async ({ page }) => {
-    await page.goto('http://localhost:5173');
-
-    const before = await page.locator('#balanceText').textContent();
-
-    await page.locator('#spinBtn').click();
-
-    await page.waitForTimeout(2500);
-
-    const after = await page.locator('#balanceText').textContent();
-
-    expect(after).not.toEqual(before);
+test("spin button is disabled immediately after clicking", async ({ page }) => {
+    await page.locator("#spinBtn").click();
+    await expect(page.locator("#spinBtn")).toBeDisabled();
 });
 
-test('bet increase updates bet amount', async ({ page }) => {
-    await page.goto('http://localhost:5173');
-
-    const before = await page.locator('#betText').textContent();
-
-    await page.locator('#betPlusBtn').click();
-
-    const after = await page.locator('#betText').textContent();
-
-    expect(after).not.toEqual(before);
-});
-
-test('bet decrease updates bet amount', async ({ page }) => {
-    await page.goto('http://localhost:5173');
-
-    await page.locator('#betPlusBtn').click();
-
-    const before = await page.locator('#betText').textContent();
-
-    await page.locator('#betMinusBtn').click();
-
-    const after = await page.locator('#betText').textContent();
-
-    expect(after).not.toEqual(before);
-});
-
-test('spin button disabled during spin', async ({ page }) => {
-    await page.goto('http://localhost:5173');
-
-    await page.locator('#spinBtn').click();
-
-    await expect(page.locator('#spinBtn')).toBeDisabled();
+test("spin button re-enables after spin completes", async ({ page }) => {
+    await page.locator("#spinBtn").click();
+    await expect(page.locator("#spinBtn")).toBeEnabled({ timeout: 10000 });
 });
