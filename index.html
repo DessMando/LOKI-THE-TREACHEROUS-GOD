@@ -1,37 +1,5 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>loki-the-treacherous-god</title>
-  </head>
-  <body>
-
-    <div id="loadingScreen" class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center bg-dark text-white" style="z-index: 9999;">
-      <h1>
-        LOKI THE TRICKSTER GOD
-      </h1>
-    </div>
-
-    <div id="bigWinText" class="position-absolute top-50 start-50 translate-middle text-warning fw-bold"
-         style="
-            font-size: 72px;
-            display: none;
-            z-index: 999;">
-      BIG WIN
-    </div>
-
-    <div id="maxWinText" class="position-absolute top-50 start-50 translate-middle text-danger fw-bold"
-          style="
-            font-size: 100px;
-            display: none;
-            z-index: 999;">
-      MAX WIN
-    </div>
-
-    <button id="spinBtn" class="btn btn-success position-absolute top-0 start-0 m-3">
-      SPIN
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -51,8 +19,8 @@
   </div>
 </div>
 
-
-<!-- styling -->
+<!-- Deze elementen worden door UIManager.ts aangemaakt als ze niet bestaan,
+     maar we zetten ze hier alvast voor de styling -->
 <div id="currentWinText" class="overlay-text text-warning"></div>
 <div id="statusText" class="overlay-text text-white"></div>
 
@@ -110,7 +78,6 @@
     </button>
   </div>
 
-    <button id="buyBonusBtn" class="btn btn-warning position-absolute top-0 start-50 translate-middle-x mt-3">
   <!-- Bonus kopen (Rechts) -->
   <div class="bonus-controls">
     <button id="buyBonusBtn" class="buy-bonus-btn">
