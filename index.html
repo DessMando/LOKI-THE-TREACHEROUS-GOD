@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="src/style.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Loki The Treacherous God</title>
@@ -10,8 +11,12 @@
 <body>
 
 <!-- 1. OVERLAYS -->
-<div id="loadingScreen" class="overlay d-flex justify-content-center align-items-center bg-dark text-white">
-  <h1 class="display-1 fw-bold">LOKI<br><small class="fs-4 text-secondary">THE TRICKSTER GOD</small></h1>
+<div id="loadingScreen" class="loading-screen">
+  <div class="loading-inner">
+    <h1 class="loading-title">LOKI</h1>
+    <p class="loading-subtitle">THE TREACHEROUS GOD</p>
+    <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+  </div>
 </div>
 
 <!-- Deze elementen worden door UIManager.ts aangemaakt als ze niet bestaan,
@@ -20,44 +25,62 @@
 <div id="statusText" class="overlay-text text-white"></div>
 
 <!-- 2. HUD (Bovenaan) -->
-<header class="hud-top d-flex justify-content-between align-items-start p-3">
+<header class="hud-top">
 
   <!-- Linksboven: De Stats Panel -->
-  <div id="uiPanel" class="stats-panel bg-dark bg-opacity-75 p-3 rounded border border-secondary text-white">
-    <div class="mb-1"><small class="text-secondary d-block">BALANCE</small><span id="balanceText">Balance: €1000.00</span></div>
-    <div class="mb-1"><small class="text-secondary d-block">BET</small><span id="betText">Bet: €0.10</span></div>
-    <div class="mb-1"><small class="text-secondary d-block">MULTIPLIER</small><span id="multiplierText">Multiplier: x1</span></div>
-    <div class="mb-1"><small class="text-secondary d-block">FREE SPINS</small><span id="freeSpinsText"></span></div>
-    <div id="bonusActiveText" class="badge bg-secondary mt-2">BONUS INACTIVE</div>
+  <div id="uiPanel" class="stats-panel">
+    <div class="stat-row">
+      <span class="stat-label">BALANCE</span>
+      <span id="balanceText" class="stat-value gold">€1000.00</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">BET</span>
+      <span id="betText" class="stat-value">€0.10</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MULTIPLIER</span>
+      <span id="multiplierText" class="stat-value">x1</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">FREE SPINS</span>
+      <span id="freeSpinsText" class="stat-value"></span>
+    </div>
+    <div id="bonusActiveText" class="bonus-badge">BONUS INACTIVE</div>
   </div>
 
   <!-- Rechtsboven: Extra knoppen -->
-  <div class="top-controls d-flex flex-column gap-2">
-    <button id="turboBtn" class="btn btn-outline-light btn-sm">TURBO OFF</button>
-    <button id="autoPlayBtn" class="btn btn-outline-light btn-sm">AUTO PLAY</button>
+  <div class="top-controls">
+    <button id="turboBtn" class="ctrl-btn">TURBO OFF</button>
+    <button id="autoPlayBtn" class="ctrl-btn">AUTO PLAY</button>
   </div>
 </header>
 
 <!-- 3. CONTROL PANEL (Onderaan) -->
 <!-- Verwijder justify-content-center en align-items-end, de CSS regelt dit nu netjes -->
-<footer class="control-panel p-4">
+<footer class="control-panel">
 
   <!-- Inzet regelen (Links) -->
-  <div class="bet-controls d-flex align-items-center bg-dark bg-opacity-50 rounded-pill p-1 px-3">
-    <button id="betMinusBtn" class="btn btn-danger rounded-circle p-2 px-3">-</button>
-    <button id="betPlusBtn" class="btn btn-primary rounded-circle p-2 px-3">+</button>
+  <div class="bet-controls">
+    <div class="bet-display">
+      <span class="bet-label">BET</span>
+      <span id="betDisplayValue">€0.10</span>
+    </div>
+    <div class="bet-buttons">
+      <button id="betMinusBtn" class="bet-btn">−</button>
+      <button id="betPlusBtn" class="bet-btn">+</button>
+    </div>
   </div>
 
   <!-- De grote Spin knop (Midden) -->
   <div class="spin-container">
-    <button id="spinBtn" class="btn btn-success btn-lg shadow-lg px-5 py-3 fw-bold border-3 border-white">
-      SPIN
+    <button id="spinBtn" class="spin-btn">
+      <span class="spin-btn-inner">SPIN</span>
     </button>
   </div>
 
   <!-- Bonus kopen (Rechts) -->
   <div class="bonus-controls">
-    <button id="buyBonusBtn" class="btn btn-warning fw-bold shadow-sm px-4 py-2">
+    <button id="buyBonusBtn" class="buy-bonus-btn">
       BUY BONUS
     </button>
   </div>
