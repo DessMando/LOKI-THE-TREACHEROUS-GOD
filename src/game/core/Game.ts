@@ -102,6 +102,14 @@ export class Game {
             return;
         }
 
+<<<<<<< Updated upstream
+=======
+
+
+        this.ui.lockUI();
+        this.sound.playSpin();
+
+>>>>>>> Stashed changes
         const deductSuccess = await this.betting.deductBet();
         if (!deductSuccess) {
             console.error("❌ Onvoldoende saldo!");

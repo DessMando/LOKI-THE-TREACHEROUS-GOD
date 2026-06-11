@@ -9,7 +9,14 @@ test('player can spin and win', async ({ page }) => {
 
     await page.locator('#spinBtn').click();
 
+<<<<<<< Updated upstream
     await page.waitForTimeout(2000);
+=======
+async function spinAndWait(page: Page): Promise<void> {
+    await page.locator("#spinBtn").click();
+    await expect(page.locator("#spinBtn")).toBeEnabled({ timeout: 15000 });
+}
+>>>>>>> Stashed changes
 
     const updateBalance = await page.locator('#balanceText').textContent();
     expect(updateBalance).toBeDefined();

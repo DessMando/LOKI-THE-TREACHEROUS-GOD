@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+<<<<<<< Updated upstream
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -32,9 +33,92 @@
 
     <button id="spinBtn" class="btn btn-success position-absolute top-0 start-0 m-3">
       SPIN
+=======
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loki The Treacherous God</title>
+</head>
+<body>
+
+<!-- 1. OVERLAYS -->
+<div id="loadingScreen" class="loading-screen">
+  <div class="loading-inner">
+    <h1 class="loading-title">LOKI</h1>
+    <p class="loading-subtitle">THE TREACHEROUS GOD</p>
+    <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+  </div>
+</div>
+
+
+<!-- styling -->
+<div id="currentWinText" class="overlay-text text-warning"></div>
+<div id="statusText" class="overlay-text text-white"></div>
+
+<!-- 2. HUD (Bovenaan) -->
+<header class="hud-top">
+
+  <!-- Linksboven: De Stats Panel -->
+  <div id="uiPanel" class="stats-panel">
+    <div class="stat-row">
+      <span class="stat-label">BALANCE</span>
+      <span id="balanceText" class="stat-value gold">€1000.00</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">BET</span>
+      <span id="betText" class="stat-value">€0.10</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MULTIPLIER</span>
+      <span id="multiplierText" class="stat-value">x1</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">FREE SPINS</span>
+      <span id="freeSpinsText" class="stat-value"></span>
+    </div>
+    <div id="bonusActiveText" class="bonus-badge">BONUS INACTIVE</div>
+  </div>
+
+  <!-- Rechtsboven: Extra knoppen -->
+  <div class="top-controls">
+    <button id="turboBtn" class="ctrl-btn">TURBO OFF</button>
+    <button id="autoPlayBtn" class="ctrl-btn">AUTO PLAY</button>
+  </div>
+</header>
+
+<!-- 3. CONTROL PANEL (Onderaan) -->
+<!-- Verwijder justify-content-center en align-items-end, de CSS regelt dit nu netjes -->
+<footer class="control-panel">
+
+  <!-- Inzet regelen (Links) -->
+  <div class="bet-controls">
+    <div class="bet-display">
+      <span class="bet-label">BET</span>
+      <span id="betDisplayValue">€0.10</span>
+    </div>
+    <div class="bet-buttons">
+      <button id="betMinusBtn" class="bet-btn">−</button>
+      <button id="betPlusBtn" class="bet-btn">+</button>
+    </div>
+  </div>
+
+  <!-- De grote Spin knop (Midden) -->
+  <div class="spin-container">
+    <button id="spinBtn" class="spin-btn">
+      <span class="spin-btn-inner">SPIN</span>
+>>>>>>> Stashed changes
     </button>
 
+<<<<<<< Updated upstream
     <button id="buyBonusBtn" class="btn btn-warning position-absolute top-0 start-50 translate-middle-x mt-3">
+=======
+  <!-- Bonus kopen (Rechts) -->
+  <div class="bonus-controls">
+    <button id="buyBonusBtn" class="buy-bonus-btn">
+>>>>>>> Stashed changes
       BUY BONUS
     </button>
 
