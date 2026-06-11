@@ -10,10 +10,12 @@ export class UIManager {
     private buyBonusButton: HTMLButtonElement;
     private betMinusButton: HTMLButtonElement;
     private betPlusButton: HTMLButtonElement;
+    private betDisplayElement: HTMLElement;
 
     constructor() {
         this.balanceElement = this.getElement("balanceText");
         this.betElement = this.getElement("betText");
+        this.betDisplayElement = this.getElement("betDisplayValue");
         this.multiplierElement = this.getElement("multiplierText");
         this.freeSpinsElement = this.getElement("freeSpinsText");
         this.bonusStatusElement = this.getElement("bonusActiveText");
@@ -53,25 +55,24 @@ export class UIManager {
 
     public updateBalance(amount: number): void {
         if (!this.balanceElement) return;
-        this.balanceElement.textContent = `Balance: €${amount.toFixed(2)}`;
-
-        if (amount < 1) {
-            this.balanceElement.style.color = "#ef4444";
-        } else if (amount < 10) {
-            this.balanceElement.style.color = "#f97316";
-        } else {
-            this.balanceElement.style.color = "#22c55e";
-        }
+        this.balanceElement.textContent = `€${amount.toFixed(2)}`;
     }
 
     public updateBet(amount: number): void {
-        if (!this.betElement) return;
-        this.betElement.textContent = `Bet: €${amount.toFixed(2)}`;
+        const formattedAmount = `€${amount.toFixed(2)}`;
+
+        if (this.betElement) {
+            this.betElement.textContent = formattedAmount;
+        }
+
+        if (this.betDisplayElement) {
+            this.betDisplayElement.textContent = formattedAmount;
+        }
     }
 
     public updateMultiplier(mult: number): void {
         if (!this.multiplierElement) return;
-        this.multiplierElement.textContent = `Multiplier: x${mult}`;
+        this.multiplierElement.textContent = `x${mult}`;
     }
 
     public updateCurrentWin(amount: number): void {
@@ -109,8 +110,7 @@ export class UIManager {
         if (!this.freeSpinsElement) return;
 
         if (count > 0 ) {
-            this.freeSpinsElement.textContent = `🎁 ${count} FREE SPINS`;
-            this.freeSpinsElement.style.color = "#34d399";
+            this.freeSpinsElement.textContent = count.toString();
             this.freeSpinsElement.style.display = "block";
         } else {
             this.freeSpinsElement.style.display = "none";
@@ -121,12 +121,10 @@ export class UIManager {
         if (!this.bonusStatusElement) return;
 
         if (isActive) {
-            this.bonusStatusElement.textContent = "🔥 BONUS ACTIVE";
-            this.bonusStatusElement.style.color = "#ff6600";
+            this.bonusStatusElement.textContent = "BONUS ACTIVE";
             this.addAnimation(this.bonusStatusElement, "pulse");
         } else {
-            this.bonusStatusElement.textContent = "⏸️ Bonus Inactive";
-            this.bonusStatusElement.style.color = "#9ca3af";
+            this.bonusStatusElement.textContent = "BONUS INACTIVE";
             this.bonusStatusElement.classList.remove("pulse");
         }
     }

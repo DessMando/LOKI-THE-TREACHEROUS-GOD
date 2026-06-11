@@ -109,12 +109,14 @@ export class Game {
         if (!deductSuccess) {
             console.error("❌ Onvoldoende saldo!");
             this.gameState.setState(GameState.GAME_OVER);
+            this.ui.unlockUI();
             return;
         }
 
         try {
             await this.grid.spin();
             const winAmount =this.grid.getTotalWin();
+            this.ui.updateCurrentWin(winAmount);
 
             if (winAmount > 0) {
                 console.log(`🎉 WON: €${winAmount.toFixed(2)}`);
