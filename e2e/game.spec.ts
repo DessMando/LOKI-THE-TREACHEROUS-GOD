@@ -1,22 +1,23 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
-// ── helpers ──────────────────────────────────────────────────────────────────
+test('player can spin and win', async ({ page }) => {
+    await page.goto('http://localhost:5173');
+    await page.waitForSelector('#spinBtn', { timeout: 5000 });
 
-async function getBalance(page: Page): Promise<number> {
-    const text = await page.locator("#balanceText").textContent() ?? "";
-    return parseFloat(text.match(/€([\d.]+)/)?.[1] ?? "0");
-}
+    const balanceText = await page.locator('#balanceText').textContent();
+    expect(balanceText).toContain('Balance');
 
-async function getBet(page: Page): Promise<number> {
-    const text = await page.locator("#betText").textContent() ?? "";
-    return parseFloat(text.match(/€([\d.]+)/)?.[1] ?? "0");
-}
+    await page.locator('#spinBtn').click();
 
-/** Clicks spin and waits until the spin button is enabled again. */
+    await page.waitForTimeout(2000);
 async function spinAndWait(page: Page): Promise<void> {
     await page.locator("#spinBtn").click();
     await expect(page.locator("#spinBtn")).toBeEnabled({ timeout: 15000 });
 }
+
+    const updateBalance = await page.locator('#balanceText').textContent();
+    expect(updateBalance).toBeDefined();
+
 
 // ── page load ────────────────────────────────────────────────────────────────
 

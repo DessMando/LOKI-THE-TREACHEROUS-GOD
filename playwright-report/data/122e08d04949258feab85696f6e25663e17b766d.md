@@ -6,16 +6,16 @@
 
 # Test info
 
-- Name: game.spec.ts >> Bonus system >> free spins counter changes after spinning in bonus
-- Location: e2e\game.spec.ts:166:5
+- Name: game.spec.ts >> Spin mechanics >> balance changes after a spin
+- Location: e2e\game.spec.ts:79:5
 
 # Error details
 
 ```
-Error: expect(received).not.toEqual(expected) // deep equality
+Error: expect(received).toBeLessThanOrEqual(expected)
 
-Expected: not "🎁 10 FREE SPINS"
-
+Expected: <= 1000
+Received:    1002.3
 ```
 
 # Page snapshot
@@ -32,7 +32,7 @@ Expected: not "🎁 10 FREE SPINS"
         - text: "Bet: €0.10"
       - generic [ref=e8]:
         - generic [ref=e9]: MULTIPLIER
-        - text: "Multiplier: x3"
+        - text: "Multiplier: x2"
       - generic [ref=e10]:
         - generic [ref=e11]: FREE SPINS
         - generic [ref=e12]: 🎁 10 FREE SPINS
@@ -51,6 +51,76 @@ Expected: not "🎁 10 FREE SPINS"
 # Test source
 
 ```ts
+  1   | import { test, expect, type Page } from "@playwright/test";
+  2   | 
+  3   | // ── helpers ──────────────────────────────────────────────────────────────────
+  4   | 
+  5   | async function getBalance(page: Page): Promise<number> {
+  6   |     const text = await page.locator("#balanceText").textContent() ?? "";
+  7   |     return parseFloat(text.match(/€([\d.]+)/)?.[1] ?? "0");
+  8   | }
+  9   | 
+  10  | async function getBet(page: Page): Promise<number> {
+  11  |     const text = await page.locator("#betText").textContent() ?? "";
+  12  |     return parseFloat(text.match(/€([\d.]+)/)?.[1] ?? "0");
+  13  | }
+  14  | 
+  15  | async function spinAndWait(page: Page): Promise<void> {
+  16  |     await page.locator("#spinBtn").click();
+  17  |     await expect(page.locator("#spinBtn")).toBeEnabled({ timeout: 15000 });
+  18  | }
+  19  | 
+  20  | // ── page load ────────────────────────────────────────────────────────────────
+  21  | 
+  22  | test.describe("Page load", () => {
+  23  |     test("loading screen disappears after init", async ({ page }) => {
+  24  |         await page.goto("/");
+  25  |         await expect(page.locator("#loadingScreen")).toBeHidden({ timeout: 10000 });
+  26  |     });
+  27  | 
+  28  |     test("spin button is visible and enabled", async ({ page }) => {
+  29  |         await page.goto("/");
+  30  |         await expect(page.locator("#spinBtn")).toBeVisible();
+  31  |         await expect(page.locator("#spinBtn")).toBeEnabled();
+  32  |     });
+  33  | 
+  34  |     test("balance starts at €1000", async ({ page }) => {
+  35  |         await page.goto("/");
+  36  |         expect(await getBalance(page)).toBe(1000);
+  37  |     });
+  38  | 
+  39  |     test("bet text shows a value above 0", async ({ page }) => {
+  40  |         await page.goto("/");
+  41  |         expect(await getBet(page)).toBeGreaterThan(0);
+  42  |     });
+  43  | 
+  44  |     test("all main UI elements are present", async ({ page }) => {
+  45  |         await page.goto("/");
+  46  |         await expect(page.locator("#spinBtn")).toBeVisible();
+  47  |         await expect(page.locator("#betText")).toBeVisible();
+  48  |         await expect(page.locator("#balanceText")).toBeVisible();
+  49  |         await expect(page.locator("#multiplierText")).toBeVisible();
+  50  |         await expect(page.locator("#betPlusBtn")).toBeVisible();
+  51  |         await expect(page.locator("#betMinusBtn")).toBeVisible();
+  52  |         await expect(page.locator("#buyBonusBtn")).toBeVisible();
+  53  |     });
+  54  | 
+  55  |     test("bigWinText and maxWinText are hidden by default", async ({ page }) => {
+  56  |         await page.goto("/");
+  57  |         await expect(page.locator("#bigWinText")).toBeHidden();
+  58  |         await expect(page.locator("#maxWinText")).toBeHidden();
+  59  |     });
+  60  | });
+  61  | 
+  62  | // ── spin mechanics ────────────────────────────────────────────────────────────
+  63  | 
+  64  | test.describe("Spin mechanics", () => {
+  65  |     test.beforeEach(async ({ page }) => {
+  66  |         await page.goto("/");
+  67  |     });
+  68  | 
+  69  |     test("spin button is disabled immediately after clicking", async ({ page }) => {
+  70  |         await page.locator("#spinBtn").click();
   71  |         await expect(page.locator("#spinBtn")).toBeDisabled();
   72  |     });
   73  | 
@@ -67,7 +137,8 @@ Expected: not "🎁 10 FREE SPINS"
   84  |         expect(after).not.toBeNaN();
   85  |         expect(after).toBeGreaterThanOrEqual(0);
   86  |         // At minimum the bet was deducted
-  87  |         expect(after).toBeLessThanOrEqual(before);
+> 87  |         expect(after).toBeLessThanOrEqual(before);
+      |                       ^ Error: expect(received).toBeLessThanOrEqual(expected)
   88  |     });
   89  | 
   90  |     test("bet buttons are disabled during a spin", async ({ page }) => {
@@ -151,8 +222,7 @@ Expected: not "🎁 10 FREE SPINS"
   168 |         const before = await page.locator("#freeSpinsText").textContent();
   169 |         await spinAndWait(page);
   170 |         const after = await page.locator("#freeSpinsText").textContent();
-> 171 |         expect(after).not.toEqual(before);
-      |                           ^ Error: expect(received).not.toEqual(expected) // deep equality
+  171 |         expect(after).not.toEqual(before);
   172 |     });
   173 | });
   174 | 
@@ -169,30 +239,4 @@ Expected: not "🎁 10 FREE SPINS"
   185 |         expect(balance).toBeGreaterThanOrEqual(0);
   186 |     });
   187 | 
-  188 |     test("UI remains functional after 10 spins", async ({ page }) => {
-  189 |         await page.goto("/");
-  190 |         for (let i = 0; i < 10; i++) {
-  191 |             await spinAndWait(page);
-  192 |         }
-  193 |         await expect(page.locator("#spinBtn")).toBeEnabled();
-  194 |         await expect(page.locator("#balanceText")).toBeVisible();
-  195 |         await expect(page.locator("#betText")).toBeVisible();
-  196 |     });
-  197 | });
-  198 | 
-  199 | test.beforeEach(async ({ page }) => {
-  200 |     await page.goto("/");
-  201 |     // Wacht tot loading screen verdwijnt = spel is volledig geladen
-  202 |     await page.waitForSelector("#loadingScreen", { state: "hidden", timeout: 15000 });
-  203 | });
-  204 | 
-  205 | test("spin button is disabled immediately after clicking", async ({ page }) => {
-  206 |     await page.locator("#spinBtn").click();
-  207 |     await expect(page.locator("#spinBtn")).toBeDisabled();
-  208 | });
-  209 | 
-  210 | test("spin button re-enables after spin completes", async ({ page }) => {
-  211 |     await page.locator("#spinBtn").click();
-  212 |     await expect(page.locator("#spinBtn")).toBeEnabled({ timeout: 10000 });
-  213 | });
 ```
