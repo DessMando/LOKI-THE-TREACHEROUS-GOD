@@ -5,7 +5,7 @@ body, html {
   height: 100%;
   overflow: hidden;
   background: #070b14;
-  font-family: sans-serif;
+  font-family: 'Rajdhani', sans-serif;
 }
 
 /* FIX VOOR PLAYWRIGHT */
@@ -138,6 +138,155 @@ canvas {
   color: #f5d78e;
   letter-spacing: 0.08em;
   pointer-events: none;
+}
+
+.ctrl-btn {
+  display: block;
+  background: transparent;
+  border: 1px solid rgba(201, 168, 76, 0.5);
+  color: #c9a84c;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  margin-bottom: 6px;
+}
+
+.ctrl-btn:hover {
+  background: rgba(201, 168, 76, 0.15);
+  color: #f5d78e;
+}
+
+.bet-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.bet-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #e8e0cc;
+  font-family: 'Rajdhani', sans-serif;
+}
+
+.bet-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: rgba(201, 168, 76, 0.6);
+  text-transform: uppercase;
+}
+
+.bet-display span:last-child {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f5d78e;
+}
+
+.bet-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.bet-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid rgba(201, 168, 76, 0.6);
+  background: rgba(201, 168, 76, 0.1);
+  color: #f5d78e;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.bet-btn:hover {
+  background: rgba(201, 168, 76, 0.25);
+}
+
+.bet-btn:active {
+  transform: scale(0.9);
+}
+
+.buy-bonus-btn {
+  background: linear-gradient(135deg, #c9a84c, #f5d78e, #c9a84c);
+  background-size: 200% 200%;
+  border: none;
+  border-radius: 6px;
+  color: #0d0d0d;
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 12px 22px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 15px rgba(201, 168, 76, 0.4);
+}
+
+.buy-bonus-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(201, 168, 76, 0.6);
+}
+
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, #0d1f0d 0%, #070b14 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.loading-inner {
+  text-align: center;
+}
+
+.loading-title {
+  font-family: 'Cinzel', serif;
+  font-size: 6rem;
+  font-weight: 900;
+  color: #f5d78e;
+  letter-spacing: 0.2em;
+  margin: 0;
+  text-shadow: 0 0 40px rgba(201, 168, 76, 0.8);
+}
+
+.loading-subtitle {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.4em;
+  color: rgba(201, 168, 76, 0.6);
+  margin: 8px 0 32px;
+  text-transform: uppercase;
+}
+
+.loading-bar {
+  width: 200px;
+  height: 3px;
+  background: rgba(201, 168, 76, 0.2);
+  border-radius: 2px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.loading-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c9a84c, #f5d78e);
+  width: 0%;
+  animation: loadFill 1.5s ease-out forwards;
+}
+
+@keyframes loadFill {
+  to { width: 100%; }
 }
 
 /* Zorg dat alle UI elementen klikbaar blijven */
