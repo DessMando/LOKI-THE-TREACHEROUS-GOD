@@ -16,14 +16,14 @@ export class PayoutSystem {
     ]);
 
     private cascadeMultipliers: Map<number, number> = new Map([
-        [1, 1.0],
-        [2, 1.5],
-        [3, 2.0],
-        [4, 3.0],
-        [5, 5.0]
+        [1, 1],
+        [2, 2],
+        [3, 3],
+        [4, 5],
+        [5, 8]
     ]);
 
-    private bonusMultiplier: number = 1.5;
+    private bonusMultiplier: number = 2;
 
     constructor() {}
 
@@ -81,9 +81,9 @@ export class PayoutSystem {
     public getWinTier(payout: number, betSize: number): "small" | "big" | "max" | null {
         const betsWon = payout / betSize;
 
-        if (betsWon >= 100) return "max";
-        if (betsWon >= 25) return "big";
-        if (betsWon >= 5) return "small";
+        if (betsWon >= 250) return "max";
+        if (betsWon >= 50) return "big";
+        if (betsWon >= 10) return "small";
         return null;
     }
 
