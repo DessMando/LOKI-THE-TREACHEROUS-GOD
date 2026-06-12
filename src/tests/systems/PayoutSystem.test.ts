@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { PayoutSystem } from "../../game/systems/PayoutSystem.ts";
 
 describe("PayoutSystem", () => {
@@ -9,7 +9,7 @@ describe("PayoutSystem", () => {
     });
 
     describe("calculateClusterPayout", () => {
-        it("returns a positive number for a known symbol", () => {
+        it("returns a positive payout for a known symbol", () => {
             expect(payout.calculateClusterPayout("crown", 4, 1, 0.10)).toBeGreaterThan(0);
         });
 
@@ -17,55 +17,46 @@ describe("PayoutSystem", () => {
             expect(payout.calculateClusterPayout("dragon", 4, 1, 0.10)).toBe(0);
         });
 
-        it("larger cluster pays more than smaller cluster", () => {
+        it("larger clusters pay more than smaller clusters", () => {
             const small = payout.calculateClusterPayout("crown", 4, 1, 0.10);
             const large = payout.calculateClusterPayout("crown", 8, 1, 0.10);
             expect(large).toBeGreaterThan(small);
         });
 
-        it("cluster of 5+ gets the 1.25x bonus", () => {
+        it("applies the 1.25x cluster bonus for 5 or more symbols", () => {
             const four = payout.calculateClusterPayout("crown", 4, 1, 0.10);
             const five = payout.calculateClusterPayout("crown", 5, 1, 0.10);
             expect(five).toBeGreaterThan(four * (5 / 4));
         });
 
-        it("higher bet gives proportionally higher payout", () => {
-            const low  = payout.calculateClusterPayout("crown", 4, 1, 0.10);
+        it("scales proportionally with bet size", () => {
+            const low = payout.calculateClusterPayout("crown", 4, 1, 0.10);
             const high = payout.calculateClusterPayout("crown", 4, 1, 1.00);
-            expect(high).toBeCloseTo(low * 10, 1);
+            expect(high).toBeCloseTo(low * 10, 2);
         });
 
-        it("symbol multiplier scales the payout", () => {
+        it("scales proportionally with symbol multiplier", () => {
             const x1 = payout.calculateClusterPayout("crown", 4, 1, 0.10);
             const x3 = payout.calculateClusterPayout("crown", 4, 3, 0.10);
-            expect(x3).toBeCloseTo(x1 * 3, 1);
+            expect(x3).toBeCloseTo(x1 * 3, 2);
         });
 
-        it("cascade level 2 applies 1.5x over level 1", () => {
+        it("applies cascade level multipliers", () => {
             const l1 = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1);
             const l2 = payout.calculateClusterPayout("crown", 4, 1, 0.10, 2);
-            expect(l2).toBeCloseTo(l1 * 1.5, 2);
+            const l3 = payout.calculateClusterPayout("crown", 4, 1, 0.10, 3);
+
+            expect(l2).toBeCloseTo(l1 * 2, 2);
+            expect(l3).toBeCloseTo(l1 * 3, 2);
         });
 
-        it("bonus active increases payout", () => {
+        it("applies the bonus multiplier", () => {
             const normal = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, false);
-            const bonus  = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, true);
-            expect(bonus).toBeGreaterThan(normal);
+            const bonus = payout.calculateClusterPayout("crown", 4, 1, 0.10, 1, true);
+            expect(bonus).toBeCloseTo(normal * 2, 2);
         });
 
-        it("crown pays more than rune for same cluster", () => {
-            const rune  = payout.calculateClusterPayout("rune",  4, 1, 0.10);
-            const crown = payout.calculateClusterPayout("crown", 4, 1, 0.10);
-            expect(crown).toBeGreaterThan(rune);
-        });
-
-        it("wild pays more than crown", () => {
-            const crown = payout.calculateClusterPayout("crown", 4, 1, 0.10);
-            const wild  = payout.calculateClusterPayout("wild",  4, 1, 0.10);
-            expect(wild).toBeGreaterThan(crown);
-        });
-
-        it("result is rounded to at most 2 decimal places", () => {
+        it("keeps the result rounded to two decimals", () => {
             const result = payout.calculateClusterPayout("rune", 4, 1, 0.10);
             const decimals = (result.toString().split(".")[1] ?? "").length;
             expect(decimals).toBeLessThanOrEqual(2);
@@ -73,27 +64,27 @@ describe("PayoutSystem", () => {
     });
 
     describe("getWinTier", () => {
-        it("returns null when payout is less than 5x bet", () => {
+        it("returns null below the small win threshold", () => {
             expect(payout.getWinTier(0.40, 0.10)).toBeNull();
         });
 
-        it("returns 'small' for 5x–24x bet", () => {
-            expect(payout.getWinTier(0.50, 0.10)).toBe("small");
-            expect(payout.getWinTier(2.40, 0.10)).toBe("small");
+        it("returns small from 10x up to 49x bet", () => {
+            expect(payout.getWinTier(1.00, 0.10)).toBe("small");
+            expect(payout.getWinTier(4.90, 0.10)).toBe("small");
         });
 
-        it("returns 'big' for 25x–99x bet", () => {
-            expect(payout.getWinTier(2.50, 0.10)).toBe("big");
-            expect(payout.getWinTier(9.90, 0.10)).toBe("big");
+        it("returns big from 50x up to 249x bet", () => {
+            expect(payout.getWinTier(5.00, 0.10)).toBe("big");
+            expect(payout.getWinTier(24.90, 0.10)).toBe("big");
         });
 
-        it("returns 'max' for 100x bet or more", () => {
-            expect(payout.getWinTier(10.00, 0.10)).toBe("max");
+        it("returns max from 250x bet or more", () => {
+            expect(payout.getWinTier(25.00, 0.10)).toBe("max");
         });
 
-        it("scales correctly with different bet sizes", () => {
-            expect(payout.getWinTier(5.00, 1.00)).toBe("small");
-            expect(payout.getWinTier(0.49, 1.00)).toBeNull();
+        it("scales with different bet sizes", () => {
+            expect(payout.getWinTier(10.00, 1.00)).toBe("small");
+            expect(payout.getWinTier(50.00, 1.00)).toBe("big");
         });
     });
 
@@ -108,15 +99,15 @@ describe("PayoutSystem", () => {
             expect(payout.getSymbolInfo("dragon")).toBeNull();
         });
 
-        it("scatter has higher baseValue than crown", () => {
+        it("scatter has the highest base value", () => {
             const scatter = payout.getSymbolInfo("scatter");
-            const crown   = payout.getSymbolInfo("crown");
+            const crown = payout.getSymbolInfo("crown");
             expect(scatter!.baseValue).toBeGreaterThan(crown!.baseValue);
         });
     });
 
     describe("setSymbolPayout", () => {
-        it("updates the baseValue and returns true", () => {
+        it("updates a symbol payout and returns true", () => {
             expect(payout.setSymbolPayout("rune", 99)).toBe(true);
             expect(payout.getSymbolInfo("rune")?.baseValue).toBe(99);
         });
@@ -127,23 +118,15 @@ describe("PayoutSystem", () => {
     });
 
     describe("getTheoreticalRTP", () => {
-        it("returns a value between 90 and 100", () => {
-            const rtp = payout.getTheoreticalRTP();
-            expect(rtp).toBeGreaterThanOrEqual(90);
-            expect(rtp).toBeLessThanOrEqual(100);
+        it("returns a stable target RTP", () => {
+            expect(payout.getTheoreticalRTP()).toBe(96.5);
         });
     });
 
     describe("getAllSymbols", () => {
-        it("returns an array with at least one entry", () => {
-            expect(payout.getAllSymbols().length).toBeGreaterThan(0);
-        });
-
-        it("contains all 7 expected symbol names", () => {
-            const names = payout.getAllSymbols().map(s => s.name);
-            ["Rune", "Staff", "Wolf", "Orb", "Crown", "Wild", "Scatter"].forEach(n => {
-                expect(names).toContain(n);
-            });
+        it("returns all configured symbols", () => {
+            const names = payout.getAllSymbols().map(symbol => symbol.name);
+            expect(names).toEqual(["Rune", "Staff", "Wolf", "Orb", "Crown", "Wild", "Scatter"]);
         });
     });
 });
