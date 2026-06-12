@@ -50,7 +50,7 @@ export class Game {
             document.body.appendChild(this.app.canvas);
             console.log("🎲 Grid maken...");
 
-            this.grid = new Grid();
+            this.grid = new Grid(() => this.betting.getCurrentBet());
             this.app.stage.addChild(this.grid.container);
 
             this.setupUIEvents();

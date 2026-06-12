@@ -6,6 +6,7 @@ import { WinSystem } from "../systems/WinSystem.ts";
 import { CascadeSystem } from "../systems/CascadeSystem.ts";
 import { BonusSystem } from "../systems/BonusSystem.ts";
 import { SpinSystem } from "../systems/SpinSystem.ts";
+import { PayoutSystem } from "../systems/PayoutSystem.ts";
 
 export class Grid {
     private isSpinning: boolean = false;
@@ -14,18 +15,20 @@ export class Grid {
     private cascadeSystem: CascadeSystem;
     private bonusSystem: BonusSystem;
     private spinSystem: SpinSystem;
+    private payoutSystem: PayoutSystem;
 
     public container: PIXI.Container;
     private symbols: Symbol[][] = [];
     private totalWinThisSpin: number = 0;
 
-    constructor() {
+    constructor(private currentBetProvider: () => number) {
         this.container = new PIXI.Container();
 
         this.winSystem = new WinSystem();
         this.cascadeSystem = new CascadeSystem(GRID_START_X, GRID_START_Y, SYMBOL_SIZE);
         this.bonusSystem = new BonusSystem();
         this.spinSystem = new SpinSystem(GRID_START_X, GRID_START_Y, SYMBOL_SIZE);
+        this.payoutSystem = new PayoutSystem();
 
         this.createGrid();
     }
@@ -67,12 +70,22 @@ export class Grid {
             }
 
             for (const cluster of clusters) {
-                const multiplier = this.winSystem.calculateTotalMultiplier(this.symbols);
-                const baseValue = 6;
-                let clusterPayout = baseValue * cluster.length * multiplier * 0.10;
-                if (cluster.length >= 5) {
-                    clusterPayout *= 1.25
-                }
+                const symbolType = cluster[0].type;
+
+                const multiplier =
+                    this.winSystem.calculateTotalMultiplier(
+                        this.symbols
+                    );
+
+                const clusterPayout =
+                    this.payoutSystem.calculateClusterPayout(
+                        symbolType,
+                        cluster.length,
+                        multiplier,
+                        this.currentBetProvider(),
+                        cascadeLevel,
+                        this.bonusSystem.getIsBonusActive()
+                    );
                 this.totalWinThisSpin += clusterPayout;
 
                 console.log(`WIN: ${cluster.length}symbols, payout: €${clusterPayout.toFixed(2)} , Total this spin: €${this.totalWinThisSpin.toFixed(2)}`);

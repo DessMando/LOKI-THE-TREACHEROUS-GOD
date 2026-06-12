@@ -39,13 +39,13 @@ export class BettingSystem {
 
     public increaseBet(): void {
         const newBet = this.currentBet + 0.10;
-        this.currentBet = Math.min(newBet, this.maxBet);
+        this.currentBet = Number(Math.min(newBet, this.maxBet).toFixed(2));
         console.log(`Bet increased to: €${this.currentBet.toFixed(2)}`);
     }
 
     public decreaseBet(): void {
         const newBet = this.currentBet - 0.10;
-        this.currentBet = Math.max(newBet, this.minBet);
+        this.currentBet = Number(Math.max(newBet, this.minBet).toFixed(2));
         console.log(`Bet decreased to: €${this.currentBet.toFixed(2)}`);
     }
 
