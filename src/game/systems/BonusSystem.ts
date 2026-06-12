@@ -52,9 +52,18 @@ export class BonusSystem {
         return false;
     }
 
-    public buyBonus(): void {
+    public buyBonus(balance: number, bet: number): boolean {
+        const cost = bet * 100;
+
+        if (balance < cost) {
+            console.warn("Not enough balance for bonus buy");
+            return false;
+        }
+
         this.startBonus();
-        console.log("U HAVE 10 FREE SPINS");
+        console.log(`BONUS BOUGHT FOR €${cost}`);
+
+        return true;
     }
 
     public updateUI(): void {
